@@ -74,7 +74,7 @@ class DeepTabular:
     @staticmethod
     def build_callbacks(monitor, patience_early, patience_reduce, save_path):
         checkpoint = ModelCheckpoint(
-            save_path, monitor=monitor, verbose=1, save_best_only=True,
+            save_path, monitor=monitor, verbose=1, save_best_only=True, save_weights_only=True
         )
         reduce = ReduceLROnPlateau(
             monitor=monitor, patience=patience_reduce, min_lr=1e-7
@@ -110,7 +110,7 @@ class DeepTabularClassifier(DeepTabular):
 
         data_y = df[target_col].tolist()
 
-        n_targets = df[target_col].max() + 1
+        n_targets = df[target_col].max() + 1 if df[target_col].max() > 1 else 1
 
         train_x1, val_x1, train_x2, val_x2, train_y, val_y = train_test_split(
             data_x1, data_x2, data_y, test_size=0.1, random_state=1337, stratify=data_y
@@ -127,7 +127,7 @@ class DeepTabularClassifier(DeepTabular):
             n_categories=len(self.mapping) + 1,
             n_targets=n_targets,
             num_layers=self.num_layers,
-            dropout=self.dropout
+            dropout=self.dropout,
         )
 
         callbacks = self.build_callbacks(
