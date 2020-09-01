@@ -27,7 +27,7 @@ def transformer_tabular(
     dff=256,
     task="classification",
     lr=0.0001,
-    dropout=0.01,
+    dropout=0.1,
 ):
     input_cols = Input(shape=(None,))
     input_values = Input(shape=(None, 1))

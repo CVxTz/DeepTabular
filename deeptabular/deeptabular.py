@@ -12,8 +12,9 @@ from .models import transformer_tabular
 
 
 class DeepTabular:
-    def __init__(self, num_layers=4):
+    def __init__(self, num_layers=4, dropout=0.2):
         self.num_layers = num_layers
+        self.dropout = dropout
         self.model = None
         self.mapping = None
         self.frequency = None
@@ -84,8 +85,8 @@ class DeepTabular:
 
 
 class DeepTabularClassifier(DeepTabular):
-    def __init__(self, num_layers=4):
-        super().__init__(num_layers=num_layers)
+    def __init__(self, num_layers=4, dropout=0.2):
+        super().__init__(num_layers=num_layers, dropout=dropout)
 
     def fit(
         self,
@@ -126,6 +127,7 @@ class DeepTabularClassifier(DeepTabular):
             n_categories=len(self.mapping) + 1,
             n_targets=n_targets,
             num_layers=self.num_layers,
+            dropout=self.dropout
         )
 
         callbacks = self.build_callbacks(
