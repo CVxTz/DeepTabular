@@ -6,14 +6,18 @@ from tensorflow.keras.layers import (
     Embedding,
     Concatenate,
 )
-from tensorflow.keras.losses import sparse_categorical_crossentropy, binary_crossentropy
+from tensorflow.keras.losses import (
+    sparse_categorical_crossentropy,
+    binary_crossentropy,
+    mse,
+)
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
 from .transformer import Encoder
 
 
-def transformer_classifier(
+def transformer_tabular(
     n_categories,
     n_targets,
     embeds_size=10,
@@ -58,6 +62,9 @@ def transformer_classifier(
 
             out = Dense(n_targets, activation="sigmoid")(x)
 
+    elif task == "regression":
+        out = Dense(n_targets, activation="linear")(x)
+
     else:
         raise NotImplementedError
 
@@ -76,6 +83,10 @@ def transformer_classifier(
         else:
 
             model.compile(optimizer=opt, loss=binary_crossentropy, metrics=["acc"])
+
+    elif task == "regression":
+
+        model.compile(optimizer=opt, loss=mse)
 
     model.summary()
 

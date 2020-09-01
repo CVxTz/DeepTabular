@@ -27,7 +27,7 @@ if __name__ == "__main__":
     for k in num_cols:
         train[k] = (train[k] - train[k].mean()) / train[k].std()
 
-    classifier = DeepTabularClassifier(num_layers=4)
+    classifier = DeepTabularClassifier(num_layers=6)
 
     classifier.fit(train, cat_cols=cal_cols, num_cols=num_cols, target_col=target)
 

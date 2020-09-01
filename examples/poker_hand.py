@@ -21,8 +21,6 @@ if __name__ == "__main__":
         ],
     )
 
-    print(train)
-
     classifier = DeepTabularClassifier(num_layers=1)
 
     classifier.fit(
@@ -42,6 +40,3 @@ if __name__ == "__main__":
         num_cols=[],
         target_col="target",
     )
-
-    print(classifier.frequency)
-    print(classifier.mapping)
