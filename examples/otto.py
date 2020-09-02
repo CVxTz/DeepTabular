@@ -1,5 +1,5 @@
+# Data : https://www.kaggle.com/c/otto-group-product-classification-challenge/
 import pandas as pd
-import json
 
 
 from deeptabular.deeptabular import DeepTabularClassifier
@@ -10,12 +10,12 @@ if __name__ == "__main__":
     target = "target"
 
     num_cols = []
-    cal_cols = ['feat_%s' % (i+1) for i in range(93)]
+    cal_cols = ["feat_%s" % (i + 1) for i in range(93)]
 
     for k in num_cols:
         train[k] = (train[k] - train[k].mean()) / train[k].std()
 
-    train[target] = train[target].map({"Class_%s" % (i+1): i for i in range(9)})
+    train[target] = train[target].map({"Class_%s" % (i + 1): i for i in range(9)})
 
     classifier = DeepTabularClassifier(num_layers=4)
 

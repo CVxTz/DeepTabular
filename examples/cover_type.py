@@ -1,3 +1,4 @@
+# Data : https://www.kaggle.com/uciml/forest-cover-type-dataset
 import pandas as pd
 
 from deeptabular.deeptabular import DeepTabularClassifier

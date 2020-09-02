@@ -21,7 +21,7 @@ if __name__ == "__main__":
         ],
     )
 
-    classifier = DeepTabularClassifier(num_layers=1)
+    classifier = DeepTabularClassifier(num_layers=12)
 
     classifier.fit(
         train,

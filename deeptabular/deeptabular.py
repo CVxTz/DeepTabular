@@ -74,7 +74,11 @@ class DeepTabular:
     @staticmethod
     def build_callbacks(monitor, patience_early, patience_reduce, save_path):
         checkpoint = ModelCheckpoint(
-            save_path, monitor=monitor, verbose=1, save_best_only=True, save_weights_only=True
+            save_path,
+            monitor=monitor,
+            verbose=1,
+            save_best_only=True,
+            save_weights_only=True,
         )
         reduce = ReduceLROnPlateau(
             monitor=monitor, patience=patience_reduce, min_lr=1e-7
@@ -85,7 +89,7 @@ class DeepTabular:
 
 
 class DeepTabularClassifier(DeepTabular):
-    def __init__(self, num_layers=4, dropout=0.2):
+    def __init__(self, num_layers=4, dropout=0.1):
         super().__init__(num_layers=num_layers, dropout=dropout)
 
     def fit(
@@ -128,6 +132,9 @@ class DeepTabularClassifier(DeepTabular):
             n_targets=n_targets,
             num_layers=self.num_layers,
             dropout=self.dropout,
+            seq_len=train_x1.shape[1],
+            embeds_size=50,
+            flatten=True,
         )
 
         callbacks = self.build_callbacks(
@@ -140,6 +147,7 @@ class DeepTabularClassifier(DeepTabular):
             validation_data=([val_x1, val_x2], val_y),
             epochs=epochs,
             callbacks=callbacks,
+            batch_size=128
         )
 
 
@@ -186,6 +194,10 @@ class DeepTabularRegressor(DeepTabular):
             n_categories=len(self.mapping) + 1,
             n_targets=n_targets,
             num_layers=self.num_layers,
+            dropout=self.dropout,
+            seq_len=train_x1.shape[1],
+            embeds_size=50,
+            flatten=True,
             task="regression",
         )
 
@@ -199,4 +211,5 @@ class DeepTabularRegressor(DeepTabular):
             validation_data=([val_x1, val_x2], val_y),
             epochs=epochs,
             callbacks=callbacks,
+            batch_size=128
         )

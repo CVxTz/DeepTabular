@@ -1,6 +1,6 @@
+# Data : http://www.gaussianprocess.org/gpml/data/
 import pandas as pd
 import scipy.io
-import numpy as np
 
 from deeptabular.deeptabular import DeepTabularRegressor
 

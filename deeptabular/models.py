@@ -2,7 +2,7 @@ from tensorflow.keras.layers import (
     Input,
     GlobalMaxPool1D,
     Dense,
-    Dropout,
+    Flatten,
     Embedding,
     Concatenate,
 )
@@ -22,15 +22,18 @@ def transformer_tabular(
     n_targets,
     embeds_size=10,
     num_layers=4,
+    num_dense_layers=3,
     d_model=128,
     num_heads=8,
     dff=256,
     task="classification",
     lr=0.0001,
     dropout=0.1,
+    seq_len=None,
+    flatten=False,
 ):
-    input_cols = Input(shape=(None,))
-    input_values = Input(shape=(None, 1))
+    input_cols = Input(shape=(seq_len,))
+    input_values = Input(shape=(seq_len, 1))
 
     x1 = Embedding(n_categories, embeds_size)(input_cols)
     x2 = Dense(embeds_size, activation="linear")(input_values)
@@ -45,13 +48,21 @@ def transformer_tabular(
         num_heads=num_heads,
         dff=dff,
         rate=dropout,
+        maximum_position_encoding=seq_len*5 if seq_len is not None else 5000
     )
 
     x = encoder(x)
 
-    x = GlobalMaxPool1D()(x)
+    if flatten:
+        x = Dense(embeds_size)(x)
+        x = Flatten()(x)
+    else:
 
-    x = Dense(4 * n_targets, activation="selu")(x)
+        x = GlobalMaxPool1D()(x)
+
+    for _ in range(num_dense_layers):
+
+        x = Dense(d_model, activation="relu")(x)
 
     if task == "classification":
         if n_targets > 1:
