@@ -20,6 +20,7 @@ class DeepTabular:
         self.frequency = None
         self.cat_cols = None
         self.num_cols = None
+        self.n_targets = None
 
     def fit(
         self,
@@ -114,7 +115,7 @@ class DeepTabularClassifier(DeepTabular):
 
         data_y = df[target_col].tolist()
 
-        n_targets = df[target_col].max() + 1 if df[target_col].max() > 1 else 1
+        self.n_targets = df[target_col].max() + 1 if df[target_col].max() > 1 else 1
 
         train_x1, val_x1, train_x2, val_x2, train_y, val_y = train_test_split(
             data_x1, data_x2, data_y, test_size=0.1, random_state=1337, stratify=data_y
@@ -129,7 +130,7 @@ class DeepTabularClassifier(DeepTabular):
 
         self.model = transformer_tabular(
             n_categories=len(self.mapping) + 1,
-            n_targets=n_targets,
+            n_targets=self.n_targets,
             num_layers=self.num_layers,
             dropout=self.dropout,
             seq_len=train_x1.shape[1],
@@ -149,6 +150,21 @@ class DeepTabularClassifier(DeepTabular):
             callbacks=callbacks,
             batch_size=128
         )
+
+    def predict(self, test):
+        data_x1, data_x2 = self.prepare_data(test)
+
+        data_x1 = np.array(data_x1)
+        data_x2 = np.array(data_x2)[..., np.newaxis]
+
+        predict = self.model.predict([data_x1, data_x2])
+
+        if self.n_targets > 1:
+            pred_classes = np.argmax(predict.squeeze()).ravel()
+        else:
+            pred_classes = (predict.squeeze() > 0.5).ravel().astype(np.int)
+
+        return pred_classes
 
 
 class DeepTabularRegressor(DeepTabular):

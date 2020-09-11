@@ -35,12 +35,12 @@ def transformer_tabular(
     input_cols = Input(shape=(seq_len,))
     input_values = Input(shape=(seq_len, 1))
 
-    x1 = Embedding(n_categories, embeds_size)(input_cols)
-    x2 = Dense(embeds_size, activation="linear")(input_values)
+    x1 = Embedding(n_categories, embeds_size, name="embed")(input_cols)
+    x2 = Dense(embeds_size, activation="linear", name="d1")(input_values)
 
     x = Concatenate(axis=-1)([x1, x2])
 
-    x = Dense(d_model, activation="relu")(x)
+    x = Dense(d_model, activation="relu", name="d2")(x)
 
     encoder = Encoder(
         num_layers=num_layers,
@@ -51,30 +51,35 @@ def transformer_tabular(
         maximum_position_encoding=seq_len*5 if seq_len is not None else 5000
     )
 
-    x = encoder(x)
+    x_encoded = encoder(x)
 
-    if flatten:
-        x = Dense(embeds_size)(x)
-        x = Flatten()(x)
-    else:
+    if task in ['classification', 'regression']:
 
-        x = GlobalMaxPool1D()(x)
+        if flatten:
+            x = Dense(embeds_size, name="d3")(x_encoded)
+            x = Flatten()(x)
+        else:
 
-    for _ in range(num_dense_layers):
+            x = GlobalMaxPool1D()(x_encoded)
 
-        x = Dense(d_model, activation="relu")(x)
+        for i in range(num_dense_layers):
+
+            x = Dense(d_model, activation="relu", name="d4_%s" % i)(x)
 
     if task == "classification":
         if n_targets > 1:
 
-            out = Dense(n_targets, activation="softmax")(x)
+            out = Dense(n_targets, activation="softmax", name="d5")(x)
 
         else:
 
-            out = Dense(n_targets, activation="sigmoid")(x)
+            out = Dense(n_targets, activation="sigmoid", name="d6")(x)
 
     elif task == "regression":
-        out = Dense(n_targets, activation="linear")(x)
+        out = Dense(n_targets, activation="linear", name="d7")(x)
+
+    elif task == "pretrain":
+        out = Dense(1, activation="linear", name="d8")(x_encoded)
 
     else:
         raise NotImplementedError
@@ -99,6 +104,10 @@ def transformer_tabular(
 
         model.compile(optimizer=opt, loss=mse)
 
+    elif task == "pretrain":
+        model.compile(optimizer=opt, loss=mse)
+
     model.summary()
 
     return model
+
