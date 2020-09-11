@@ -215,4 +215,3 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
             "warmup_steps": self.warmup_steps,
             "name": self.name,
         }
-

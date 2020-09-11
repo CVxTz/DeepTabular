@@ -5,6 +5,7 @@ from tensorflow.keras.layers import (
     Flatten,
     Embedding,
     Concatenate,
+    Dropout,
 )
 from tensorflow.keras.losses import (
     sparse_categorical_crossentropy,
@@ -36,7 +37,12 @@ def transformer_tabular(
     input_values = Input(shape=(seq_len, 1))
 
     x1 = Embedding(n_categories, embeds_size, name="embed")(input_cols)
-    x2 = Dense(embeds_size, activation="linear", name="d1")(input_values)
+    if task == "pretrain":
+        x2 = Dropout(0.3)(input_values)
+        x2 = Dense(embeds_size, activation="linear", name="d1")(x2)
+
+    else:
+        x2 = Dense(embeds_size, activation="linear", name="d1")(input_values)
 
     x = Concatenate(axis=-1)([x1, x2])
 
@@ -48,12 +54,12 @@ def transformer_tabular(
         num_heads=num_heads,
         dff=dff,
         rate=dropout,
-        maximum_position_encoding=seq_len*5 if seq_len is not None else 5000
+        maximum_position_encoding=seq_len * 5 if seq_len is not None else 5000,
     )
 
     x_encoded = encoder(x)
 
-    if task in ['classification', 'regression']:
+    if task in ["classification", "regression"]:
 
         if flatten:
             x = Dense(embeds_size, name="d3")(x_encoded)
@@ -110,4 +116,3 @@ def transformer_tabular(
     model.summary()
 
     return model
-

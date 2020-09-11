@@ -1,7 +1,8 @@
 # Data : https://www.kaggle.com/uciml/forest-cover-type-dataset
 import pandas as pd
+import numpy as np
 
-from deeptabular.deeptabular import DeepTabularClassifier
+from deeptabular.deeptabular import DeepTabularClassifier, DeepTabularUnsupervised
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
@@ -36,11 +37,32 @@ if __name__ == "__main__":
         train[k] = (train[k] - mean) / std
         test[k] = (test[k] - mean) / std
 
+    train = train.sample(frac=1)
+
+    pretrain = DeepTabularUnsupervised(num_layers=6)
+
+    pretrain.fit(
+        train,
+        cat_cols=cal_cols,
+        num_cols=num_cols,
+        epochs=2,
+        save_path="unsupervised.h5",
+    )
+
     classifier = DeepTabularClassifier(num_layers=6)
 
-    classifier.fit(train, cat_cols=cal_cols, num_cols=num_cols, target_col=target)
+    classifier.fit(
+        train,
+        cat_cols=cal_cols,
+        num_cols=num_cols,
+        target_col=target,
+        epochs=2,
+        mapping=pretrain.mapping,
+        weights="unsupervised.h5",
+    )
 
     pred = classifier.predict(test)
 
-    print("acc", accuracy_score(test[target], pred))
+    y_true = np.array(test[target].values).ravel()
 
+    print("acc", accuracy_score(y_true, pred))

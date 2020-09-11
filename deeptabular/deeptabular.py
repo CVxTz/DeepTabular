@@ -1,5 +1,6 @@
 from collections import Counter
 from typing import List
+import random
 
 import numpy as np
 import pandas as pd
@@ -22,21 +23,6 @@ class DeepTabular:
         self.num_cols = None
         self.n_targets = None
 
-    def fit(
-        self,
-        df: pd.DataFrame,
-        cat_cols: List,
-        num_cols: List,
-        target_col: str,
-        monitor,
-        patience_early,
-        patience_reduce,
-        save_path,
-        epochs=64,
-    ):
-
-        pass
-
     def fit_mapping(self, df: pd.DataFrame):
 
         self.frequency = dict()
@@ -51,7 +37,7 @@ class DeepTabular:
             k: i + 1 for i, k in enumerate(list(self.frequency.keys()) + self.num_cols)
         }
 
-    def prepare_data(self, df):
+    def prepare_data(self, df, add_distractors=False):
         data_x1 = []
         data_x2 = []
 
@@ -62,11 +48,17 @@ class DeepTabular:
             sample_x1 += ["%s_%s" % (col, str(row[col])) for col in self.cat_cols]
             sample_x1 += [col for col in self.num_cols]
 
-            sample_x1 = [self.mapping.get(x, 0) for x in sample_x1]
-
             sample_x2 += [1 for _ in self.cat_cols]
             sample_x2 += [row[col] for col in self.num_cols]
 
+            if add_distractors and len(self.cat_cols):
+                distractors_x1 = random.sample(list(self.mapping), len(self.cat_cols))
+                distractors_x2 = [1 if a in sample_x1 else 0 for a in distractors_x1]
+
+                sample_x1 += distractors_x1
+                sample_x2 += distractors_x2
+
+            sample_x1 = [self.mapping.get(x, 0) for x in sample_x1]
             data_x1.append(sample_x1)
             data_x2.append(sample_x2)
 
@@ -104,12 +96,20 @@ class DeepTabularClassifier(DeepTabular):
         patience_reduce: int = 9,
         save_path: str = "classifier.h5",
         epochs=128,
+        mapping=None,
+        weights=None,
     ):
 
         self.cat_cols = cat_cols
         self.num_cols = num_cols
 
-        self.fit_mapping(df)
+        if mapping is None:
+
+            self.fit_mapping(df)
+
+        else:
+
+            self.mapping = mapping
 
         data_x1, data_x2 = self.prepare_data(df)
 
@@ -138,6 +138,9 @@ class DeepTabularClassifier(DeepTabular):
             flatten=True,
         )
 
+        if weights is not None:
+            self.model.load_weights(weights, by_name=True)
+
         callbacks = self.build_callbacks(
             monitor, patience_early, patience_reduce, save_path
         )
@@ -148,7 +151,7 @@ class DeepTabularClassifier(DeepTabular):
             validation_data=([val_x1, val_x2], val_y),
             epochs=epochs,
             callbacks=callbacks,
-            batch_size=128
+            batch_size=128,
         )
 
     def predict(self, test):
@@ -160,7 +163,7 @@ class DeepTabularClassifier(DeepTabular):
         predict = self.model.predict([data_x1, data_x2])
 
         if self.n_targets > 1:
-            pred_classes = np.argmax(predict.squeeze()).ravel()
+            pred_classes = np.argmax(predict.squeeze(), axis=-1).ravel()
         else:
             pred_classes = (predict.squeeze() > 0.5).ravel().astype(np.int)
 
@@ -168,8 +171,8 @@ class DeepTabularClassifier(DeepTabular):
 
 
 class DeepTabularRegressor(DeepTabular):
-    def __init__(self, num_layers=4):
-        super().__init__(num_layers=num_layers)
+    def __init__(self, num_layers=4, dropout=0.1):
+        super().__init__(num_layers=num_layers, dropout=dropout)
 
     def fit(
         self,
@@ -182,6 +185,8 @@ class DeepTabularRegressor(DeepTabular):
         patience_reduce: int = 9,
         save_path: str = "regressor.h5",
         epochs=128,
+        mapping=None,
+        weights=None,
     ):
 
         self.cat_cols = cat_cols
@@ -227,5 +232,62 @@ class DeepTabularRegressor(DeepTabular):
             validation_data=([val_x1, val_x2], val_y),
             epochs=epochs,
             callbacks=callbacks,
-            batch_size=128
+            batch_size=128,
+        )
+
+
+class DeepTabularUnsupervised(DeepTabular):
+    def __init__(self, num_layers=4, dropout=0.1):
+        super().__init__(num_layers=num_layers, dropout=dropout)
+
+    def fit(
+        self,
+        df: pd.DataFrame,
+        cat_cols: List,
+        num_cols: List,
+        monitor: str = "loss",
+        patience_early: int = 15,
+        patience_reduce: int = 9,
+        save_path: str = "unsupervised.h5",
+        epochs=128,
+    ):
+
+        self.cat_cols = cat_cols
+        self.num_cols = num_cols
+
+        self.fit_mapping(df)
+
+        data_x1, data_x2 = self.prepare_data(df, add_distractors=True)
+
+        train_x1, val_x1, train_x2, val_x2 = train_test_split(
+            data_x1, data_x2, test_size=0.1, random_state=1337
+        )
+
+        train_x1 = np.array(train_x1)
+        val_x1 = np.array(val_x1)
+        train_x2 = np.array(train_x2)[..., np.newaxis]
+        val_x2 = np.array(val_x2)[..., np.newaxis]
+
+        self.model = transformer_tabular(
+            n_categories=len(self.mapping) + 1,
+            n_targets=None,
+            num_layers=self.num_layers,
+            dropout=self.dropout,
+            seq_len=train_x1.shape[1],
+            embeds_size=50,
+            flatten=True,
+            task="pretrain",
+        )
+
+        callbacks = self.build_callbacks(
+            monitor, patience_early, patience_reduce, save_path
+        )
+
+        self.model.fit(
+            [train_x1, train_x2],
+            train_x2,
+            validation_data=([val_x1, val_x2], val_x2),
+            epochs=epochs,
+            callbacks=callbacks,
+            batch_size=128,
         )
