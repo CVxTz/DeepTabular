@@ -13,6 +13,8 @@ if __name__ == "__main__":
     for k in num_cols:
         train[k] = (train[k] - train[k].mean()) / train[k].std()
 
-    regressor = DeepTabularRegressor(num_layers=4)
+    regressor = DeepTabularRegressor(
+        num_layers=4, cat_cols=cat_cols, num_cols=num_cols, n_targets=len(targets),
+    )
 
-    regressor.fit(train, cat_cols=cat_cols, num_cols=num_cols, target_cols=targets)
+    regressor.fit(train, target_cols=targets)

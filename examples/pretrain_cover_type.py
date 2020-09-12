@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from deeptabular.deeptabular import DeepTabularClassifier, DeepTabularUnsupervised
 
 if __name__ == "__main__":
-    data = pd.read_csv("../data/cover_type/covtype.csv")
+    data = pd.read_csv("../data/cover_type/covtype.csv", nrows=10000)
 
     train, test = train_test_split(data, test_size=0.2, random_state=1337)
 
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         "Hillshade_3pm",
         "Horizontal_Distance_To_Fire_Points",
     ]
-    cal_cols = ["Soil_Type%s" % (i + 1) for i in range(40)] + [
+    cat_cols = ["Soil_Type%s" % (i + 1) for i in range(40)] + [
         "Wilderness_Area%s" % (i + 1) for i in range(4)
     ]
 
@@ -41,33 +41,34 @@ if __name__ == "__main__":
 
     train = train.sample(frac=1)
 
-    pretrain = DeepTabularUnsupervised(num_layers=6)
-
-    pretrain.fit(
-        train,
-        cat_cols=cal_cols,
+    pretrain = DeepTabularUnsupervised(
+        num_layers=6,
+        cat_cols=cat_cols,
         num_cols=num_cols,
-        save_path="unsupervised.h5",
-        epochs=64,
+        n_targets=int(train[target].max() + 1),
     )
 
-    pretrain.save_config("config.json")
+    pretrain.fit(
+        train, save_path="unsupervised.h5", epochs=2,
+    )
 
-    sizes = [1000, 2000, 4000, 8000, 16000]
+    pretrain.save_config("cover_config.json")
+    pretrain.save_weigts("cover_weights.h5")
+
+    sizes = [1000, 2000]  # , 4000, 8000, 16000]
 
     scratch_accuracies = []
     pretrain_accuracies = []
 
     for size in sizes:
-        classifier = DeepTabularClassifier(num_layers=6)
-
-        classifier.fit(
-            train[:size],
-            cat_cols=cal_cols,
+        classifier = DeepTabularClassifier(
+            num_layers=6,
+            cat_cols=cat_cols,
             num_cols=num_cols,
-            target_col=target,
-            mapping=pretrain.mapping,
+            n_targets=train[target].max() + 1,
         )
+
+        classifier.fit(train[:size], target_col=target, epochs=2)
 
         pred = classifier.predict(test)
 
@@ -78,16 +79,11 @@ if __name__ == "__main__":
         del classifier
 
     for size in sizes:
-        classifier = DeepTabularClassifier(num_layers=6)
+        classifier = DeepTabularClassifier()
+        classifier.load_config("cover_config.json")
+        classifier.load_weights("cover_weights.h5", by_name=True)
 
-        classifier.fit(
-            train[:size],
-            cat_cols=cal_cols,
-            num_cols=num_cols,
-            target_col=target,
-            mapping=pretrain.mapping,
-            weights="unsupervised.h5",
-        )
+        classifier.fit(train[:size], target_col=target, epochs=2)
 
         pred = classifier.predict(test)
 

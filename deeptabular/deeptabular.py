@@ -13,15 +13,17 @@ from .models import transformer_tabular
 
 
 class DeepTabular:
-    def __init__(self, num_layers=4, dropout=0.2):
+    def __init__(
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.2,
+    ):
         self.num_layers = num_layers
         self.dropout = dropout
         self.model = None
         self.mapping = None
         self.frequency = None
-        self.cat_cols = None
-        self.num_cols = None
-        self.n_targets = None
+        self.cat_cols = cat_cols
+        self.num_cols = num_cols
+        self.n_targets = n_targets
 
     def fit_mapping(self, df: pd.DataFrame):
 
@@ -114,47 +116,57 @@ class DeepTabular:
         self.dropout = config["dropout"]
         self.frequency = config["frequency"]
 
-    def load_weights(self, path):
+    def load_weights(self, path, by_name=False):
 
-        model = self.build_model()
-        model.load_weights(path)
+        self.build_model()
+        self.model.load_weights(path, by_name=by_name)
 
 
 class DeepTabularClassifier(DeepTabular):
-    def __init__(self, num_layers=4, dropout=0.1):
-        super().__init__(num_layers=num_layers, dropout=dropout)
+    def __init__(
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.2,
+    ):
+        super().__init__(
+            cat_cols=cat_cols,
+            num_cols=num_cols,
+            n_targets=n_targets,
+            num_layers=num_layers,
+            dropout=dropout,
+        )
+
+    def build_model(self):
+        model = transformer_tabular(
+            n_categories=len(self.mapping) + 1,
+            n_targets=self.n_targets,
+            num_layers=self.num_layers,
+            dropout=self.dropout,
+            seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
+            + (0 if self.num_cols is None else len(self.num_cols)),
+            embeds_size=50,
+            flatten=True,
+        )
+        self.model = model
 
     def fit(
         self,
         df: pd.DataFrame,
-        cat_cols: List,
-        num_cols: List,
         target_col: str,
         monitor: str = "val_acc",
         patience_early: int = 15,
         patience_reduce: int = 9,
         save_path: str = "classifier.h5",
         epochs=128,
-        mapping=None,
-        weights=None,
     ):
 
-        self.cat_cols = cat_cols
-        self.num_cols = num_cols
-
-        if mapping is None:
+        if self.mapping is None:
 
             self.fit_mapping(df)
 
-        else:
-
-            self.mapping = mapping
+        self.build_model()
 
         data_x1, data_x2 = self.prepare_data(df)
 
         data_y = df[target_col].tolist()
-
-        self.n_targets = df[target_col].max() + 1 if df[target_col].max() > 1 else 1
 
         train_x1, val_x1, train_x2, val_x2, train_y, val_y = train_test_split(
             data_x1, data_x2, data_y, test_size=0.1, random_state=1337, stratify=data_y
@@ -166,19 +178,6 @@ class DeepTabularClassifier(DeepTabular):
         val_x2 = np.array(val_x2)[..., np.newaxis]
         train_y = np.array(train_y)[..., np.newaxis]
         val_y = np.array(val_y)[..., np.newaxis]
-
-        self.model = transformer_tabular(
-            n_categories=len(self.mapping) + 1,
-            n_targets=self.n_targets,
-            num_layers=self.num_layers,
-            dropout=self.dropout,
-            seq_len=train_x1.shape[1],
-            embeds_size=50,
-            flatten=True,
-        )
-
-        if weights is not None:
-            self.model.load_weights(weights, by_name=True)
 
         callbacks = self.build_callbacks(
             monitor, patience_early, patience_reduce, save_path
@@ -210,29 +209,47 @@ class DeepTabularClassifier(DeepTabular):
 
 
 class DeepTabularRegressor(DeepTabular):
-    def __init__(self, num_layers=4, dropout=0.1):
-        super().__init__(num_layers=num_layers, dropout=dropout)
+    def __init__(
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.2,
+    ):
+        super().__init__(
+            cat_cols=cat_cols,
+            num_cols=num_cols,
+            n_targets=n_targets,
+            num_layers=num_layers,
+            dropout=dropout,
+        )
+
+    def build_model(self):
+        model = transformer_tabular(
+            n_categories=len(self.mapping) + 1,
+            n_targets=self.n_targets,
+            num_layers=self.num_layers,
+            dropout=self.dropout,
+            seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
+            + (0 if self.num_cols is None else len(self.num_cols)),
+            embeds_size=50,
+            flatten=True,
+            task="regression",
+        )
+        self.model = model
 
     def fit(
         self,
         df: pd.DataFrame,
-        cat_cols: List,
-        num_cols: List,
         target_cols: List[str],
         monitor: str = "val_loss",
         patience_early: int = 15,
         patience_reduce: int = 9,
         save_path: str = "regressor.h5",
         epochs=128,
-        mapping=None,
-        weights=None,
     ):
-        self.cat_cols = cat_cols
-        self.num_cols = num_cols
 
-        n_targets = len(target_cols)
+        if self.mapping is None:
 
-        self.fit_mapping(df)
+            self.fit_mapping(df)
+
+        self.build_model()
 
         data_x1, data_x2 = self.prepare_data(df)
 
@@ -249,17 +266,6 @@ class DeepTabularRegressor(DeepTabular):
         train_y = np.array(train_y)
         val_y = np.array(val_y)
 
-        self.model = transformer_tabular(
-            n_categories=len(self.mapping) + 1,
-            n_targets=n_targets,
-            num_layers=self.num_layers,
-            dropout=self.dropout,
-            seq_len=train_x1.shape[1],
-            embeds_size=50,
-            flatten=True,
-            task="regression",
-        )
-
         callbacks = self.build_callbacks(
             monitor, patience_early, patience_reduce, save_path
         )
@@ -275,24 +281,46 @@ class DeepTabularRegressor(DeepTabular):
 
 
 class DeepTabularUnsupervised(DeepTabular):
-    def __init__(self, num_layers=4, dropout=0.1):
-        super().__init__(num_layers=num_layers, dropout=dropout)
+    def __init__(
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.2,
+    ):
+        super().__init__(
+            cat_cols=cat_cols,
+            num_cols=num_cols,
+            n_targets=n_targets,
+            num_layers=num_layers,
+            dropout=dropout,
+        )
+
+    def build_model(self):
+        model = transformer_tabular(
+            n_categories=len(self.mapping) + 1,
+            n_targets=self.n_targets,
+            num_layers=self.num_layers,
+            dropout=self.dropout,
+            seq_len=2 * (0 if self.cat_cols is None else len(self.cat_cols))
+            + (0 if self.num_cols is None else len(self.num_cols)),
+            embeds_size=50,
+            flatten=True,
+            task="pretrain",
+        )
+        self.model = model
 
     def fit(
         self,
         df: pd.DataFrame,
-        cat_cols: List,
-        num_cols: List,
         monitor: str = "loss",
         patience_early: int = 15,
         patience_reduce: int = 9,
         save_path: str = "unsupervised.h5",
         epochs=128,
     ):
-        self.cat_cols = cat_cols
-        self.num_cols = num_cols
 
-        self.fit_mapping(df)
+        if self.mapping is None:
+
+            self.fit_mapping(df)
+
+        self.build_model()
 
         data_x1, data_x2 = self.prepare_data(df, add_distractors=True)
 
@@ -304,17 +332,6 @@ class DeepTabularUnsupervised(DeepTabular):
         val_x1 = np.array(val_x1)
         train_x2 = np.array(train_x2)[..., np.newaxis]
         val_x2 = np.array(val_x2)[..., np.newaxis]
-
-        self.model = transformer_tabular(
-            n_categories=len(self.mapping) + 1,
-            n_targets=None,
-            num_layers=self.num_layers,
-            dropout=self.dropout,
-            seq_len=train_x1.shape[1],
-            embeds_size=50,
-            flatten=True,
-            task="pretrain",
-        )
 
         callbacks = self.build_callbacks(
             monitor, patience_early, patience_reduce, save_path
