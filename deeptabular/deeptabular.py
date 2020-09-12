@@ -119,7 +119,9 @@ class DeepTabular:
         self.mapping = config["mapping"]
         self.cat_cols = config["cat_cols"]
         self.num_cols = config["num_cols"]
-        self.n_targets = config["n_targets"] if self.n_targets is None else self.n_targets
+        self.n_targets = (
+            config["n_targets"] if self.n_targets is None else self.n_targets
+        )
         self.num_layers = config["num_layers"]
         self.dropout = config["dropout"]
         self.frequency = config["frequency"]
@@ -286,6 +288,16 @@ class DeepTabularRegressor(DeepTabular):
             callbacks=callbacks,
             batch_size=128,
         )
+
+    def predict(self, test):
+        data_x1, data_x2 = self.prepare_data(test)
+
+        data_x1 = np.array(data_x1)
+        data_x2 = np.array(data_x2)[..., np.newaxis]
+
+        predict = self.model.predict([data_x1, data_x2])
+
+        return predict
 
 
 class DeepTabularUnsupervised(DeepTabular):
