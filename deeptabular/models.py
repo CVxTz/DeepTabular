@@ -70,7 +70,6 @@ def transformer_tabular(
             x = GlobalMaxPool1D()(x_encoded)
 
         for i in range(num_dense_layers):
-
             x = Dense(d_model, activation="relu", name="d4_%s" % i)(x)
 
     if task == "classification":

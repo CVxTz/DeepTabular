@@ -1,7 +1,6 @@
 # Data : https://www.kaggle.com/uciml/adult-census-income/
 import pandas as pd
 
-
 from deeptabular.deeptabular import DeepTabularClassifier
 
 if __name__ == "__main__":

@@ -1,14 +1,13 @@
+import json
+import random
 from collections import Counter
 from typing import List
-import random
-import json
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from tqdm import tqdm
-
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
+from tqdm import tqdm
 
 from .models import transformer_tabular
 
@@ -228,7 +227,6 @@ class DeepTabularRegressor(DeepTabular):
         mapping=None,
         weights=None,
     ):
-
         self.cat_cols = cat_cols
         self.num_cols = num_cols
 
@@ -291,7 +289,6 @@ class DeepTabularUnsupervised(DeepTabular):
         save_path: str = "unsupervised.h5",
         epochs=128,
     ):
-
         self.cat_cols = cat_cols
         self.num_cols = num_cols
 

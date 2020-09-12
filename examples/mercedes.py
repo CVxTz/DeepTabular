@@ -1,6 +1,5 @@
 # https://www.kaggle.com/c/mercedes-benz-greener-manufacturing
 import pandas as pd
-import scipy.io
 
 from deeptabular.deeptabular import DeepTabularRegressor
 

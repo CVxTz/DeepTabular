@@ -1,9 +1,8 @@
-import matplotlib.pyplot as plt
 import json
 
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-
     data = json.load(open("pretrain.json"))
 
     fig = plt.figure()

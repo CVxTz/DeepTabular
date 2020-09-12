@@ -1,11 +1,12 @@
 # Data : https://www.kaggle.com/uciml/forest-cover-type-dataset
-import pandas as pd
-import numpy as np
 import json
 
-from deeptabular.deeptabular import DeepTabularClassifier, DeepTabularUnsupervised
-from sklearn.model_selection import train_test_split
+import numpy as np
+import pandas as pd
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+
+from deeptabular.deeptabular import DeepTabularClassifier, DeepTabularUnsupervised
 
 if __name__ == "__main__":
     data = pd.read_csv("../data/cover_type/covtype.csv")
@@ -58,7 +59,6 @@ if __name__ == "__main__":
     pretrain_accuracies = []
 
     for size in sizes:
-
         classifier = DeepTabularClassifier(num_layers=6)
 
         classifier.fit(

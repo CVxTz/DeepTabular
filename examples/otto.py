@@ -1,7 +1,6 @@
 # Data : https://www.kaggle.com/c/otto-group-product-classification-challenge/
 import pandas as pd
 
-
 from deeptabular.deeptabular import DeepTabularClassifier
 
 if __name__ == "__main__":
