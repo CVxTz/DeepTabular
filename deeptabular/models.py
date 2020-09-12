@@ -24,7 +24,7 @@ def transformer_tabular(
     n_targets,
     embeds_size=10,
     num_layers=4,
-    num_dense_layers=3,
+    num_dense_layers=1,
     d_model=128,
     num_heads=8,
     dff=256,
@@ -85,7 +85,7 @@ def transformer_tabular(
         out = Dense(n_targets, activation="linear", name="d7")(x)
 
     elif task == "pretrain":
-        out = Dense(1, activation="linear", name="d8")(x_encoded)
+        out = Dense(n_targets, activation="linear", name="d8")(x_encoded)
 
     else:
         raise NotImplementedError

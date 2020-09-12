@@ -1,7 +1,7 @@
 import json
 import random
 from collections import Counter
-from typing import List
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
@@ -68,19 +68,27 @@ class DeepTabular:
 
     @staticmethod
     def build_callbacks(monitor, patience_early, patience_reduce, save_path):
-        checkpoint = ModelCheckpoint(
-            save_path,
-            monitor=monitor,
-            verbose=1,
-            save_best_only=True,
-            save_weights_only=True,
-        )
+        callbacks = []
+        if save_path is not None:
+            checkpoint = ModelCheckpoint(
+                save_path,
+                monitor=monitor,
+                verbose=1,
+                save_best_only=True,
+                save_weights_only=True,
+            )
+            callbacks.append(checkpoint)
+
         reduce = ReduceLROnPlateau(
             monitor=monitor, patience=patience_reduce, min_lr=1e-7
         )
+        callbacks.append(reduce)
+
         early = EarlyStopping(monitor=monitor, patience=patience_early)
 
-        return [checkpoint, reduce, early]
+        callbacks.append(early)
+
+        return callbacks
 
     def build_model(self):
         raise NotImplementedError
@@ -111,7 +119,7 @@ class DeepTabular:
         self.mapping = config["mapping"]
         self.cat_cols = config["cat_cols"]
         self.num_cols = config["num_cols"]
-        self.n_targets = config["n_targets"]
+        self.n_targets = config["n_targets"] if self.n_targets is None else self.n_targets
         self.num_layers = config["num_layers"]
         self.dropout = config["dropout"]
         self.frequency = config["frequency"]
@@ -143,7 +151,7 @@ class DeepTabularClassifier(DeepTabular):
             seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
-            flatten=True,
+            flatten=False,
         )
         self.model = model
 
@@ -154,7 +162,7 @@ class DeepTabularClassifier(DeepTabular):
         monitor: str = "val_acc",
         patience_early: int = 15,
         patience_reduce: int = 9,
-        save_path: str = "classifier.h5",
+        save_path: Union[str, None] = "classifier.h5",
         epochs=128,
     ):
 
@@ -229,7 +237,7 @@ class DeepTabularRegressor(DeepTabular):
             seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
-            flatten=True,
+            flatten=False,
             task="regression",
         )
         self.model = model
@@ -241,7 +249,7 @@ class DeepTabularRegressor(DeepTabular):
         monitor: str = "val_loss",
         patience_early: int = 15,
         patience_reduce: int = 9,
-        save_path: str = "regressor.h5",
+        save_path: Union[str, None] = "regressor.h5",
         epochs=128,
     ):
 
@@ -301,7 +309,7 @@ class DeepTabularUnsupervised(DeepTabular):
             seq_len=2 * (0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
-            flatten=True,
+            flatten=False,
             task="pretrain",
         )
         self.model = model
@@ -312,7 +320,7 @@ class DeepTabularUnsupervised(DeepTabular):
         monitor: str = "loss",
         patience_early: int = 15,
         patience_reduce: int = 9,
-        save_path: str = "unsupervised.h5",
+        save_path: Union[str, None] = "unsupervised.h5",
         epochs=128,
     ):
 

@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from deeptabular.deeptabular import DeepTabularClassifier, DeepTabularUnsupervised
 
 if __name__ == "__main__":
-    data = pd.read_csv("../data/cover_type/covtype.csv", nrows=10000)
+    data = pd.read_csv("../data/cover_type/covtype.csv")
 
     train, test = train_test_split(data, test_size=0.2, random_state=1337)
 
@@ -45,17 +45,17 @@ if __name__ == "__main__":
         num_layers=6,
         cat_cols=cat_cols,
         num_cols=num_cols,
-        n_targets=int(train[target].max() + 1),
+        n_targets=1,
     )
 
     pretrain.fit(
-        train, save_path="unsupervised.h5", epochs=2,
+        train, save_path=None, epochs=34,
     )
 
     pretrain.save_config("cover_config.json")
     pretrain.save_weigts("cover_weights.h5")
 
-    sizes = [1000, 2000]  # , 4000, 8000, 16000]
+    sizes = [500, 1000, 2000, 4000, 8000, 16000]
 
     scratch_accuracies = []
     pretrain_accuracies = []
@@ -65,10 +65,10 @@ if __name__ == "__main__":
             num_layers=6,
             cat_cols=cat_cols,
             num_cols=num_cols,
-            n_targets=train[target].max() + 1,
+            n_targets=int(train[target].max() + 1),
         )
 
-        classifier.fit(train[:size], target_col=target, epochs=2)
+        classifier.fit(train[:size], target_col=target, epochs=128)
 
         pred = classifier.predict(test)
 
@@ -79,11 +79,11 @@ if __name__ == "__main__":
         del classifier
 
     for size in sizes:
-        classifier = DeepTabularClassifier()
+        classifier = DeepTabularClassifier(n_targets=int(train[target].max() + 1))
         classifier.load_config("cover_config.json")
         classifier.load_weights("cover_weights.h5", by_name=True)
 
-        classifier.fit(train[:size], target_col=target, epochs=2)
+        classifier.fit(train[:size], target_col=target, epochs=128)
 
         pred = classifier.predict(test)
 
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     print("scratch_accuracies", scratch_accuracies)
     print("pretrain_accuracies", pretrain_accuracies)
 
-    with open("pretrain.json", "w") as f:
+    with open("cover_pretrain_performance.json", "w") as f:
         json.dump(
             {
                 "sizes": sizes,

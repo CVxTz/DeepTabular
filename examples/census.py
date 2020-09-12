@@ -39,7 +39,7 @@ if __name__ == "__main__":
         num_layers=10, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
     )
 
-    classifier.fit(train, target_col=target, epochs=2)
+    classifier.fit(train, target_col=target, epochs=128)
 
     pred = classifier.predict(test)
 
