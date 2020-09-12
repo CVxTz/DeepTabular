@@ -1,13 +1,14 @@
 # Data : https://www.kaggle.com/uciml/forest-cover-type-dataset
 import pandas as pd
 import numpy as np
+import json
 
 from deeptabular.deeptabular import DeepTabularClassifier, DeepTabularUnsupervised
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 if __name__ == "__main__":
-    data = pd.read_csv("../data/cover_type/covtype.csv", nrows=10000)
+    data = pd.read_csv("../data/cover_type/covtype.csv")
 
     train, test = train_test_split(data, test_size=0.2, random_state=1337)
 
@@ -42,27 +43,66 @@ if __name__ == "__main__":
     pretrain = DeepTabularUnsupervised(num_layers=6)
 
     pretrain.fit(
-        train,
-        cat_cols=cal_cols,
-        num_cols=num_cols,
-        epochs=2,
-        save_path="unsupervised.h5",
+        train, cat_cols=cal_cols, num_cols=num_cols, save_path="unsupervised.h5", epochs=64
     )
 
-    classifier = DeepTabularClassifier(num_layers=6)
+    pretrain.save_config("config.json")
 
-    classifier.fit(
-        train,
-        cat_cols=cal_cols,
-        num_cols=num_cols,
-        target_col=target,
-        epochs=2,
-        mapping=pretrain.mapping,
-        weights="unsupervised.h5",
-    )
+    sizes = [1000, 2000, 4000, 8000, 16000, 32000, 64000]
 
-    pred = classifier.predict(test)
+    scratch_accuracies = []
+    pretrain_accuracies = []
 
-    y_true = np.array(test[target].values).ravel()
+    for size in sizes:
 
-    print("acc", accuracy_score(y_true, pred))
+        classifier = DeepTabularClassifier(num_layers=6)
+
+        classifier.fit(
+            train[:size],
+            cat_cols=cal_cols,
+            num_cols=num_cols,
+            target_col=target,
+            mapping=pretrain.mapping,
+        )
+
+        pred = classifier.predict(test)
+
+        y_true = np.array(test[target].values).ravel()
+
+        scratch_accuracies.append(accuracy_score(y_true, pred))
+
+        del classifier
+
+    for size in sizes:
+        classifier = DeepTabularClassifier(num_layers=6)
+
+        classifier.fit(
+            train[:size],
+            cat_cols=cal_cols,
+            num_cols=num_cols,
+            target_col=target,
+            mapping=pretrain.mapping,
+            weights="unsupervised.h5",
+        )
+
+        pred = classifier.predict(test)
+
+        y_true = np.array(test[target].values).ravel()
+
+        pretrain_accuracies.append(accuracy_score(y_true, pred))
+
+        del classifier
+
+    print("sizes", sizes)
+    print("scratch_accuracies", scratch_accuracies)
+    print("pretrain_accuracies", pretrain_accuracies)
+
+    with open("pretrain.json", "w") as f:
+        json.dump(
+            {
+                "sizes": sizes,
+                "scratch_accuracies": scratch_accuracies,
+                "pretrain_accuracies": pretrain_accuracies,
+            },
+            f,
+        )

@@ -11,6 +11,7 @@ from tensorflow.keras.losses import (
     sparse_categorical_crossentropy,
     binary_crossentropy,
     mse,
+    mae,
 )
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
@@ -38,7 +39,7 @@ def transformer_tabular(
 
     x1 = Embedding(n_categories, embeds_size, name="embed")(input_cols)
     if task == "pretrain":
-        x2 = Dropout(0.3)(input_values)
+        x2 = Dropout(0.5)(input_values)
         x2 = Dense(embeds_size, activation="linear", name="d1")(x2)
 
     else:
@@ -111,7 +112,7 @@ def transformer_tabular(
         model.compile(optimizer=opt, loss=mse)
 
     elif task == "pretrain":
-        model.compile(optimizer=opt, loss=mse)
+        model.compile(optimizer=opt, loss=mae)
 
     model.summary()
 

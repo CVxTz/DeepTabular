@@ -1,6 +1,7 @@
 from collections import Counter
 from typing import List
 import random
+import json
 
 import numpy as np
 import pandas as pd
@@ -79,6 +80,17 @@ class DeepTabular:
         early = EarlyStopping(monitor=monitor, patience=patience_early)
 
         return [checkpoint, reduce, early]
+
+    def save_config(self, path):
+        with open(path, "w") as f:
+            json.dump(
+                {
+                    "mapping": self.mapping,
+                    "cat_cols": self.cat_cols,
+                    "num_cols": self.num_cols,
+                },
+                f,
+            )
 
 
 class DeepTabularClassifier(DeepTabular):
