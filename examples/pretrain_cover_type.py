@@ -43,12 +43,16 @@ if __name__ == "__main__":
     pretrain = DeepTabularUnsupervised(num_layers=6)
 
     pretrain.fit(
-        train, cat_cols=cal_cols, num_cols=num_cols, save_path="unsupervised.h5", epochs=64
+        train,
+        cat_cols=cal_cols,
+        num_cols=num_cols,
+        save_path="unsupervised.h5",
+        epochs=64,
     )
 
     pretrain.save_config("config.json")
 
-    sizes = [1000, 2000, 4000, 8000, 16000, 32000, 64000]
+    sizes = [1000, 2000, 4000, 8000, 16000]
 
     scratch_accuracies = []
     pretrain_accuracies = []

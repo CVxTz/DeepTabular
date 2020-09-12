@@ -81,6 +81,9 @@ class DeepTabular:
 
         return [checkpoint, reduce, early]
 
+    def build_model(self):
+        raise NotImplementedError
+
     def save_config(self, path):
         with open(path, "w") as f:
             json.dump(
@@ -88,9 +91,34 @@ class DeepTabular:
                     "mapping": self.mapping,
                     "cat_cols": self.cat_cols,
                     "num_cols": self.num_cols,
+                    "n_targets": self.n_targets,
+                    "num_layers": self.num_layers,
+                    "dropout": self.dropout,
+                    "frequency": self.frequency,
                 },
                 f,
+                indent=4,
             )
+
+    def save_weigts(self, path):
+        self.model.save_weights(path)
+
+    def load_config(self, path):
+        with open(path, "r") as f:
+            config = json.load(f)
+
+        self.mapping = config["mapping"]
+        self.cat_cols = config["cat_cols"]
+        self.num_cols = config["num_cols"]
+        self.n_targets = config["n_targets"]
+        self.num_layers = config["num_layers"]
+        self.dropout = config["dropout"]
+        self.frequency = config["frequency"]
+
+    def load_weights(self, path):
+
+        model = self.build_model()
+        model.load_weights(path)
 
 
 class DeepTabularClassifier(DeepTabular):
