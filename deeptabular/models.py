@@ -24,7 +24,7 @@ def transformer_tabular(
     n_targets,
     embeds_size=10,
     num_layers=4,
-    num_dense_layers=1,
+    num_dense_layers=2,
     d_model=128,
     num_heads=8,
     dff=256,

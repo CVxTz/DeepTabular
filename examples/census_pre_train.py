@@ -1,4 +1,4 @@
-# Data : https://www.kaggle.com/uciml/forest-cover-type-dataset
+# Data : https://www.kaggle.com/uciml/adult-census-income/
 import json
 
 import numpy as np
@@ -12,35 +12,33 @@ if __name__ == "__main__":
 
     n = 5
 
-    data = pd.read_csv("../data/cover_type/covtype.csv")
+    data = pd.read_csv("../data/census/adult.csv")
 
     train, test = train_test_split(data, test_size=0.2, random_state=1337)
 
-    target = "Cover_Type"
-    num_cols = [
-        "Elevation",
-        "Aspect",
-        "Slope",
-        "Horizontal_Distance_To_Hydrology",
-        "Vertical_Distance_To_Hydrology",
-        "Horizontal_Distance_To_Roadways",
-        "Hillshade_9am",
-        "Hillshade_Noon",
-        "Hillshade_3pm",
-        "Horizontal_Distance_To_Fire_Points",
-    ]
-    cat_cols = ["Soil_Type%s" % (i + 1) for i in range(40)] + [
-        "Wilderness_Area%s" % (i + 1) for i in range(4)
-    ]
+    target = "income"
 
-    train[target] = train[target] - 1
-    test[target] = test[target] - 1
+    num_cols = ["age", "fnlwgt", "capital.gain", "capital.loss", "hours.per.week"]
+    cat_cols = [
+        "workclass",
+        "education",
+        "education.num",
+        "marital.status",
+        "occupation",
+        "relationship",
+        "race",
+        "sex",
+        "native.country",
+    ]
 
     for k in num_cols:
         mean = train[k].mean()
         std = train[k].std()
         train[k] = (train[k] - mean) / std
         test[k] = (test[k] - mean) / std
+
+    train[target] = train[target].map({"<=50K": 0, ">50K": 1})
+    test[target] = test[target].map({"<=50K": 0, ">50K": 1})
 
     train = train.sample(frac=1)
 
@@ -52,8 +50,8 @@ if __name__ == "__main__":
         train, save_path=None, epochs=34,
     )
 
-    pretrain.save_config("cover_config.json")
-    pretrain.save_weigts("cover_weights.h5")
+    pretrain.save_config("census_config.json")
+    pretrain.save_weigts("census_weights.h5")
 
     sizes = [1000, 2000, 4000, 8000, 16000]
 
@@ -65,12 +63,8 @@ if __name__ == "__main__":
         acc = 0
 
         for _ in range(n):
-
             classifier = DeepTabularClassifier(
-                num_layers=6,
-                cat_cols=cat_cols,
-                num_cols=num_cols,
-                n_targets=int(train[target].max() + 1),
+                num_layers=6, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
             )
             classifier.fit(train.sample(n=size), target_col=target, epochs=128)
 
@@ -89,10 +83,9 @@ if __name__ == "__main__":
         acc = 0
 
         for _ in range(n):
-
             classifier = DeepTabularClassifier(n_targets=int(train[target].max() + 1))
-            classifier.load_config("cover_config.json")
-            classifier.load_weights("cover_weights.h5", by_name=True)
+            classifier.load_config("census_config.json")
+            classifier.load_weights("census_weights.h5", by_name=True)
 
             classifier.fit(train.sample(n=size), target_col=target, epochs=128)
 
@@ -110,7 +103,7 @@ if __name__ == "__main__":
     print("scratch_accuracies", scratch_accuracies)
     print("pretrain_accuracies", pretrain_accuracies)
 
-    with open("cover_pretrain_performance.json", "w") as f:
+    with open("census_pretrain_performance.json", "w") as f:
         json.dump(
             {
                 "sizes": sizes,

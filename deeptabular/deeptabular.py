@@ -153,7 +153,7 @@ class DeepTabularClassifier(DeepTabular):
             seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
-            flatten=False,
+            flatten=True,
         )
         self.model = model
 
@@ -239,7 +239,7 @@ class DeepTabularRegressor(DeepTabular):
             seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
-            flatten=False,
+            flatten=True,
             task="regression",
         )
         self.model = model

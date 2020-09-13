@@ -38,12 +38,12 @@ if __name__ == "__main__":
         num_layers=6, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
     )
 
-    pretrain.fit(
-        train, save_path=None, epochs=34,
-    )
-
-    pretrain.save_config("sarco_config.json")
-    pretrain.save_weigts("sarco_weights.h5")
+    # pretrain.fit(
+    #     train, save_path=None, epochs=34,
+    # )
+    #
+    # pretrain.save_config("sarco_config.json")
+    # pretrain.save_weigts("sarco_weights.h5")
 
     sizes = [500, 1000, 2000, 4000, 8000, 16000]
 
@@ -86,10 +86,7 @@ if __name__ == "__main__":
 
     with open("sarco_performance.json", "w") as f:
         json.dump(
-            {
-                "sizes": sizes,
-                "scratch_accuracies": scratch_mae,
-                "pretrain_accuracies": pretrain_mae,
-            },
+            {"sizes": sizes, "scratch_mae": scratch_mae, "pretrain_mae": pretrain_mae,},
             f,
+            indent=4,
         )
