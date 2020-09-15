@@ -47,7 +47,7 @@ if __name__ == "__main__":
     )
 
     pretrain.fit(
-        train, save_path=None, epochs=34,
+        train, save_path=None, epochs=256,
     )
 
     pretrain.save_config("census_config.json")
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         acc = 0
 
         for _ in range(n):
-            classifier = DeepTabularClassifier(n_targets=int(train[target].max() + 1))
+            classifier = DeepTabularClassifier(n_targets=1)
             classifier.load_config("census_config.json")
             classifier.load_weights("census_weights.h5", by_name=True)
 

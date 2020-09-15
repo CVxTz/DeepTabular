@@ -8,6 +8,9 @@ from sklearn.metrics import mean_absolute_error
 from deeptabular.deeptabular import DeepTabularRegressor, DeepTabularUnsupervised
 
 if __name__ == "__main__":
+
+    n = 5
+
     train_np = scipy.io.loadmat("../data/sarco/sarcos_inv.mat")["sarcos_inv"]
     train = pd.DataFrame(
         data=train_np,
@@ -38,47 +41,64 @@ if __name__ == "__main__":
         num_layers=6, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
     )
 
-    # pretrain.fit(
-    #     train, save_path=None, epochs=34,
-    # )
-    #
-    # pretrain.save_config("sarco_config.json")
-    # pretrain.save_weigts("sarco_weights.h5")
+    pretrain.fit(
+        train, save_path=None, epochs=256,
+    )
 
-    sizes = [500, 1000, 2000, 4000, 8000, 16000]
+    pretrain.save_config("sarco_config.json")
+    pretrain.save_weigts("sarco_weights.h5")
+
+    sizes = [1000, 2000, 4000, 8000, 16000]
 
     scratch_mae = []
     pretrain_mae = []
 
     for size in sizes:
-        regressor = DeepTabularRegressor(
-            num_layers=6, cat_cols=cat_cols, num_cols=num_cols, n_targets=len(targets),
-        )
 
-        regressor.fit(train[:size], target_cols=targets, epochs=128)
+        mae = 0
 
-        pred = regressor.predict(test).ravel()
+        for _ in range(n):
 
-        y_true = np.array(test[targets].values).ravel()
+            regressor = DeepTabularRegressor(
+                num_layers=6,
+                cat_cols=cat_cols,
+                num_cols=num_cols,
+                n_targets=len(targets),
+            )
 
-        scratch_mae.append(mean_absolute_error(y_true, pred))
+            regressor.fit(train[:size], target_cols=targets, epochs=128)
 
-        del regressor
+            pred = regressor.predict(test).ravel()
+
+            y_true = np.array(test[targets].values).ravel()
+
+            mae += mean_absolute_error(y_true, pred) / n
+
+            del regressor
+
+        scratch_mae.append(mae)
 
     for size in sizes:
-        regressor = DeepTabularRegressor(n_targets=len(targets))
-        regressor.load_config("sarco_config.json")
-        regressor.load_weights("sarco_weights.h5", by_name=True)
 
-        regressor.fit(train[:size], target_cols=targets, epochs=128)
+        mae = 0
 
-        pred = regressor.predict(test).ravel()
+        for _ in range(n):
 
-        y_true = np.array(test[targets].values).ravel()
+            regressor = DeepTabularRegressor(n_targets=len(targets))
+            regressor.load_config("sarco_config.json")
+            regressor.load_weights("sarco_weights.h5", by_name=True)
 
-        pretrain_mae.append(mean_absolute_error(y_true, pred))
+            regressor.fit(train[:size], target_cols=targets, epochs=128)
 
-        del regressor
+            pred = regressor.predict(test).ravel()
+
+            y_true = np.array(test[targets].values).ravel()
+
+            mae += mean_absolute_error(y_true, pred) / n
+
+            del regressor
+
+        pretrain_mae.append(mae)
 
     print("sizes", sizes)
     print("scratch_accuracies", scratch_mae)

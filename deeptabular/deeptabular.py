@@ -202,6 +202,8 @@ class DeepTabularClassifier(DeepTabular):
             batch_size=128,
         )
 
+        self.model.load_weights(save_path)
+
     def predict(self, test):
         data_x1, data_x2 = self.prepare_data(test)
 
@@ -357,11 +359,18 @@ class DeepTabularUnsupervised(DeepTabular):
             monitor, patience_early, patience_reduce, save_path
         )
 
-        self.model.fit(
-            [train_x1, train_x2],
-            train_x2,
-            validation_data=([val_x1, val_x2], val_x2),
-            epochs=epochs,
-            callbacks=callbacks,
-            batch_size=128,
-        )
+        for _ in range(epochs):
+            train_x2_mask = train_x2.copy()
+            val_x2_mask = val_x2.copy()
+
+            train_x2_mask[np.random.uniform(size=train_x2_mask.shape) > 0.5] = 0
+            val_x2_mask[np.random.uniform(size=val_x2_mask.shape) > 0.5] = 0
+
+            self.model.fit(
+                [train_x1, train_x2_mask],
+                train_x2,
+                validation_data=([val_x1, val_x2_mask], val_x2),
+                epochs=1,
+                callbacks=callbacks,
+                batch_size=128,
+            )

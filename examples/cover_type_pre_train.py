@@ -49,7 +49,7 @@ if __name__ == "__main__":
     )
 
     pretrain.fit(
-        train, save_path=None, epochs=34,
+        train, save_path=None, epochs=64,
     )
 
     pretrain.save_config("cover_config.json")

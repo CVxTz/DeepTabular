@@ -38,12 +38,7 @@ def transformer_tabular(
     input_values = Input(shape=(seq_len, 1))
 
     x1 = Embedding(n_categories, embeds_size, name="embed")(input_cols)
-    if task == "pretrain":
-        x2 = Dropout(0.5)(input_values)
-        x2 = Dense(embeds_size, activation="linear", name="d1")(x2)
-
-    else:
-        x2 = Dense(embeds_size, activation="linear", name="d1")(input_values)
+    x2 = Dense(embeds_size, activation="linear", name="d1")(input_values)
 
     x = Concatenate(axis=-1)([x1, x2])
 
@@ -56,6 +51,7 @@ def transformer_tabular(
         dff=dff,
         rate=dropout,
         maximum_position_encoding=seq_len * 5 if seq_len is not None else 5000,
+        name="transformer",
     )
 
     x_encoded = encoder(x)
