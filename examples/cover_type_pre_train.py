@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     data = pd.read_csv("../data/cover_type/covtype.csv")
 
-    train, test = train_test_split(data, test_size=0.2, random_state=1337)
+    train, test = train_test_split(data, test_size=0.1, random_state=1337)
 
     target = "Cover_Type"
     num_cols = [
@@ -49,13 +49,10 @@ if __name__ == "__main__":
     )
 
     pretrain.fit(
-        train, save_path=None, epochs=64,
+        train, save_path="cover", epochs=128,
     )
 
-    pretrain.save_config("cover_config.json")
-    pretrain.save_weigts("cover_weights.h5")
-
-    sizes = [1000, 2000, 4000, 8000, 16000]
+    sizes = [500, 1000, 2000, 5000, 10000]
 
     scratch_accuracies = []
     pretrain_accuracies = []
@@ -72,7 +69,7 @@ if __name__ == "__main__":
                 num_cols=num_cols,
                 n_targets=int(train[target].max() + 1),
             )
-            classifier.fit(train.sample(n=size), target_col=target, epochs=128)
+            classifier.fit(train.sample(n=size), target_col=target, epochs=256)
 
             pred = classifier.predict(test)
 
@@ -94,7 +91,7 @@ if __name__ == "__main__":
             classifier.load_config("cover_config.json")
             classifier.load_weights("cover_weights.h5", by_name=True)
 
-            classifier.fit(train.sample(n=size), target_col=target, epochs=128)
+            classifier.fit(train.sample(n=size), target_col=target, epochs=256)
 
             pred = classifier.predict(test)
 

@@ -4,8 +4,8 @@ from tensorflow.keras.layers import (
     Dense,
     Flatten,
     Embedding,
-    Concatenate,
-    Dropout,
+    Add,
+    Concatenate
 )
 from tensorflow.keras.losses import (
     sparse_categorical_crossentropy,
@@ -16,7 +16,7 @@ from tensorflow.keras.losses import (
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
-from .transformer import Encoder
+from .transformer import EncoderLayer
 
 
 def transformer_tabular(
@@ -24,15 +24,14 @@ def transformer_tabular(
     n_targets,
     embeds_size=10,
     num_layers=4,
-    num_dense_layers=2,
-    d_model=128,
-    num_heads=8,
+    num_dense_layers=3,
+    d_model=64,
+    num_heads=4,
     dff=256,
     task="classification",
     lr=0.0001,
-    dropout=0.1,
+    dropout=0.01,
     seq_len=None,
-    flatten=False,
 ):
     input_cols = Input(shape=(seq_len,))
     input_values = Input(shape=(seq_len, 1))
@@ -40,33 +39,27 @@ def transformer_tabular(
     x1 = Embedding(n_categories, embeds_size, name="embed")(input_cols)
     x2 = Dense(embeds_size, activation="linear", name="d1")(input_values)
 
-    x = Concatenate(axis=-1)([x1, x2])
+    x = Add()([x1, x2])
 
     x = Dense(d_model, activation="relu", name="d2")(x)
 
-    encoder = Encoder(
-        num_layers=num_layers,
-        d_model=d_model,
-        num_heads=num_heads,
-        dff=dff,
-        rate=dropout,
-        maximum_position_encoding=seq_len * 5 if seq_len is not None else 5000,
-        name="transformer",
-    )
+    l_encoded = []
 
-    x_encoded = encoder(x)
+    for i in range(num_layers):
+        x = EncoderLayer(d_model=d_model, num_heads=num_heads, dff=dff, rate=dropout, name="encoder_%s" % i)(x)
+        l_encoded.append(x)
+
+    x_encoded = l_encoded[-1]
 
     if task in ["classification", "regression"]:
 
-        if flatten:
-            x = Dense(embeds_size, name="d3")(x_encoded)
-            x = Flatten()(x)
-        else:
+        x = Concatenate()([GlobalMaxPool1D()(a) for a in l_encoded])
 
-            x = GlobalMaxPool1D()(x_encoded)
+        x = Dense(d_model, name="d3", activation="relu")(x)
 
         for i in range(num_dense_layers):
-            x = Dense(d_model, activation="relu", name="d4_%s" % i)(x)
+            x_to_add = Dense(d_model, activation="relu", name="d4_%s" % i)(x)
+            x = Add()([x, x_to_add])
 
     if task == "classification":
         if n_targets > 1:

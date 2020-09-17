@@ -42,13 +42,10 @@ if __name__ == "__main__":
     )
 
     pretrain.fit(
-        train, save_path=None, epochs=256,
+        train, save_path="sarco", epochs=512,
     )
 
-    pretrain.save_config("sarco_config.json")
-    pretrain.save_weigts("sarco_weights.h5")
-
-    sizes = [1000, 2000, 4000, 8000, 16000]
+    sizes = [200, 500, 1000, 2000, 5000, 10000]
 
     scratch_mae = []
     pretrain_mae = []
@@ -66,7 +63,7 @@ if __name__ == "__main__":
                 n_targets=len(targets),
             )
 
-            regressor.fit(train[:size], target_cols=targets, epochs=128)
+            regressor.fit(train[:size], target_cols=targets, epochs=256)
 
             pred = regressor.predict(test).ravel()
 
@@ -88,7 +85,7 @@ if __name__ == "__main__":
             regressor.load_config("sarco_config.json")
             regressor.load_weights("sarco_weights.h5", by_name=True)
 
-            regressor.fit(train[:size], target_cols=targets, epochs=128)
+            regressor.fit(train[:size], target_cols=targets, epochs=256)
 
             pred = regressor.predict(test).ravel()
 

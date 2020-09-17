@@ -47,13 +47,10 @@ if __name__ == "__main__":
     )
 
     pretrain.fit(
-        train, save_path=None, epochs=256,
+        train, save_path="census", epochs=512,
     )
 
-    pretrain.save_config("census_config.json")
-    pretrain.save_weigts("census_weights.h5")
-
-    sizes = [1000, 2000, 4000, 8000, 16000]
+    sizes = [200, 500, 1000, 2000, 5000, 10000]
 
     scratch_accuracies = []
     pretrain_accuracies = []
@@ -66,7 +63,7 @@ if __name__ == "__main__":
             classifier = DeepTabularClassifier(
                 num_layers=6, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
             )
-            classifier.fit(train.sample(n=size), target_col=target, epochs=128)
+            classifier.fit(train.sample(n=size), target_col=target, epochs=256)
 
             pred = classifier.predict(test)
 
@@ -87,7 +84,7 @@ if __name__ == "__main__":
             classifier.load_config("census_config.json")
             classifier.load_weights("census_weights.h5", by_name=True)
 
-            classifier.fit(train.sample(n=size), target_col=target, epochs=128)
+            classifier.fit(train.sample(n=size), target_col=target, epochs=256)
 
             pred = classifier.predict(test)
 

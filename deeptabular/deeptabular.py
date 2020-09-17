@@ -14,7 +14,7 @@ from .models import transformer_tabular
 
 class DeepTabular:
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.2,
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.01,
     ):
         self.num_layers = num_layers
         self.dropout = dropout
@@ -134,7 +134,7 @@ class DeepTabular:
 
 class DeepTabularClassifier(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.2,
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.01,
     ):
         super().__init__(
             cat_cols=cat_cols,
@@ -153,7 +153,6 @@ class DeepTabularClassifier(DeepTabular):
             seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
-            flatten=True,
         )
         self.model = model
 
@@ -172,7 +171,9 @@ class DeepTabularClassifier(DeepTabular):
 
             self.fit_mapping(df)
 
-        self.build_model()
+        if self.model is None:
+
+            self.build_model()
 
         data_x1, data_x2 = self.prepare_data(df)
 
@@ -202,7 +203,6 @@ class DeepTabularClassifier(DeepTabular):
             batch_size=128,
         )
 
-        self.model.load_weights(save_path)
 
     def predict(self, test):
         data_x1, data_x2 = self.prepare_data(test)
@@ -222,7 +222,7 @@ class DeepTabularClassifier(DeepTabular):
 
 class DeepTabularRegressor(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.2,
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.01,
     ):
         super().__init__(
             cat_cols=cat_cols,
@@ -241,7 +241,6 @@ class DeepTabularRegressor(DeepTabular):
             seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
-            flatten=True,
             task="regression",
         )
         self.model = model
@@ -261,7 +260,9 @@ class DeepTabularRegressor(DeepTabular):
 
             self.fit_mapping(df)
 
-        self.build_model()
+        if self.model is None:
+
+            self.build_model()
 
         data_x1, data_x2 = self.prepare_data(df)
 
@@ -304,7 +305,7 @@ class DeepTabularRegressor(DeepTabular):
 
 class DeepTabularUnsupervised(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.2,
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.01,
     ):
         super().__init__(
             cat_cols=cat_cols,
@@ -323,7 +324,6 @@ class DeepTabularUnsupervised(DeepTabular):
             seq_len=2 * (0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
-            flatten=False,
             task="pretrain",
         )
         self.model = model
@@ -342,7 +342,9 @@ class DeepTabularUnsupervised(DeepTabular):
 
             self.fit_mapping(df)
 
-        self.build_model()
+        if self.model is None:
+
+            self.build_model()
 
         data_x1, data_x2 = self.prepare_data(df, add_distractors=True)
 
@@ -356,10 +358,10 @@ class DeepTabularUnsupervised(DeepTabular):
         val_x2 = np.array(val_x2)[..., np.newaxis]
 
         callbacks = self.build_callbacks(
-            monitor, patience_early, patience_reduce, save_path
+            monitor, patience_early, patience_reduce, save_path=None
         )
 
-        for _ in range(epochs):
+        for _ in range(epochs // 10):
             train_x2_mask = train_x2.copy()
             val_x2_mask = val_x2.copy()
 
@@ -370,7 +372,13 @@ class DeepTabularUnsupervised(DeepTabular):
                 [train_x1, train_x2_mask],
                 train_x2,
                 validation_data=([val_x1, val_x2_mask], val_x2),
-                epochs=1,
+                epochs=10,
                 callbacks=callbacks,
                 batch_size=128,
             )
+
+            self.save_config("%s_config.json" % save_path)
+            self.save_weigts("%s_weights.h5" % save_path)
+
+            del train_x2_mask
+            del val_x2_mask

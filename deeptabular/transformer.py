@@ -11,29 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import tensorflow as tf
-
-
-def get_angles(pos, i, d_model):
-    angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float32(d_model))
-    return pos * angle_rates
-
-
-def positional_encoding(position, d_model):
-    angle_rads = get_angles(
-        np.arange(position)[:, np.newaxis], np.arange(d_model)[np.newaxis, :], d_model
-    )
-
-    # apply sin to even indices in the array; 2i
-    angle_rads[:, 0::2] = np.sin(angle_rads[:, 0::2])
-
-    # apply cos to odd indices in the array; 2i+1
-    angle_rads[:, 1::2] = np.cos(angle_rads[:, 1::2])
-
-    pos_encoding = angle_rads[np.newaxis, ...]
-
-    return tf.cast(pos_encoding, dtype=tf.float32)
 
 
 def scaled_dot_product_attention(q, k, v, mask):
@@ -136,8 +114,9 @@ def point_wise_feed_forward_network(d_model, dff):
 
 
 class EncoderLayer(tf.keras.layers.Layer):
-    def __init__(self, d_model, num_heads, dff, rate=0.1):
-        super(EncoderLayer, self).__init__()
+    def __init__(self, d_model, num_heads, dff, rate=0.1,        name="encoder",
+):
+        super(EncoderLayer, self).__init__(name=name)
 
         self.mha = MultiHeadAttention(d_model, num_heads)
         self.ffn = point_wise_feed_forward_network(d_model, dff)
@@ -169,7 +148,6 @@ class Encoder(tf.keras.layers.Layer):
         d_model,
         num_heads,
         dff,
-        maximum_position_encoding,
         rate=0.1,
         name="encoder",
     ):
@@ -178,8 +156,6 @@ class Encoder(tf.keras.layers.Layer):
         self.d_model = d_model
         self.num_layers = num_layers
 
-        self.pos_encoding = positional_encoding(maximum_position_encoding, self.d_model)
-
         self.enc_layers = [
             EncoderLayer(d_model, num_heads, dff, rate) for _ in range(num_layers)
         ]
@@ -187,10 +163,6 @@ class Encoder(tf.keras.layers.Layer):
         self.dropout = tf.keras.layers.Dropout(rate)
 
     def call(self, x, training=None, mask=None):
-        seq_len = tf.shape(x)[1]
-
-        x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
-        # x += self.pos_encoding[:, :seq_len, :]
 
         x = self.dropout(x, training=training)
 
