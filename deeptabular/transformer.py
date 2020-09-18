@@ -114,8 +114,9 @@ def point_wise_feed_forward_network(d_model, dff):
 
 
 class EncoderLayer(tf.keras.layers.Layer):
-    def __init__(self, d_model, num_heads, dff, rate=0.1,        name="encoder",
-):
+    def __init__(
+        self, d_model, num_heads, dff, rate=0.1, name="encoder",
+    ):
         super(EncoderLayer, self).__init__(name=name)
 
         self.mha = MultiHeadAttention(d_model, num_heads)
@@ -143,13 +144,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
 class Encoder(tf.keras.layers.Layer):
     def __init__(
-        self,
-        num_layers,
-        d_model,
-        num_heads,
-        dff,
-        rate=0.1,
-        name="encoder",
+        self, num_layers, d_model, num_heads, dff, rate=0.1, name="encoder",
     ):
         super(Encoder, self).__init__(name=name)
 

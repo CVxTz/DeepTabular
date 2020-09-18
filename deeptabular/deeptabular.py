@@ -134,7 +134,7 @@ class DeepTabular:
 
 class DeepTabularClassifier(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.01,
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.1,
     ):
         super().__init__(
             cat_cols=cat_cols,
@@ -203,7 +203,6 @@ class DeepTabularClassifier(DeepTabular):
             batch_size=128,
         )
 
-
     def predict(self, test):
         data_x1, data_x2 = self.prepare_data(test)
 
@@ -222,7 +221,7 @@ class DeepTabularClassifier(DeepTabular):
 
 class DeepTabularRegressor(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.01,
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.1,
     ):
         super().__init__(
             cat_cols=cat_cols,
@@ -292,6 +291,9 @@ class DeepTabularRegressor(DeepTabular):
             batch_size=128,
         )
 
+        if save_path is not None:
+            self.model.load_weights(save_path)
+
     def predict(self, test):
         data_x1, data_x2 = self.prepare_data(test)
 
@@ -305,7 +307,7 @@ class DeepTabularRegressor(DeepTabular):
 
 class DeepTabularUnsupervised(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.01,
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.1,
     ):
         super().__init__(
             cat_cols=cat_cols,

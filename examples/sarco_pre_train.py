@@ -45,7 +45,7 @@ if __name__ == "__main__":
         train, save_path="sarco", epochs=512,
     )
 
-    sizes = [200, 500, 1000, 2000, 5000, 10000]
+    sizes = [200, 500, 1000, 2000, 5000]
 
     scratch_mae = []
     pretrain_mae = []

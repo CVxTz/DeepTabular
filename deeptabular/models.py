@@ -5,7 +5,7 @@ from tensorflow.keras.layers import (
     Flatten,
     Embedding,
     Add,
-    Concatenate
+    Concatenate,
 )
 from tensorflow.keras.losses import (
     sparse_categorical_crossentropy,
@@ -46,7 +46,13 @@ def transformer_tabular(
     l_encoded = []
 
     for i in range(num_layers):
-        x = EncoderLayer(d_model=d_model, num_heads=num_heads, dff=dff, rate=dropout, name="encoder_%s" % i)(x)
+        x = EncoderLayer(
+            d_model=d_model,
+            num_heads=num_heads,
+            dff=dff,
+            rate=dropout,
+            name="encoder_%s" % i,
+        )(x)
         l_encoded.append(x)
 
     x_encoded = l_encoded[-1]

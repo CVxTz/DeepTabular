@@ -10,4 +10,6 @@ if __name__ == "__main__":
     plt.plot(data["sizes"], data["scratch_mae"], label="Trained from scratch")
     plt.plot(data["sizes"], data["pretrain_mae"], label="Pre-Trained")
     plt.legend()
+    plt.xlabel("Data size")
+    plt.ylabel("MAE")
     plt.show()
