@@ -6,7 +6,11 @@ from tensorflow.keras.layers import (
     Embedding,
     Add,
     Concatenate,
+    Layer,
 )
+
+import tensorflow as tf
+
 from tensorflow.keras.losses import (
     sparse_categorical_crossentropy,
     binary_crossentropy,
@@ -17,6 +21,34 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
 from .transformer import EncoderLayer
+
+
+class AttentionPooling(Layer):
+    def __init__(self, d_model, name=None):
+        super(AttentionPooling, self).__init__(name=name)
+        self.d_model = d_model
+
+        self.wq = Dense(d_model, activation="relu")
+        self.d_score = Dense(1)
+
+    def call(self, q, mask=None):
+
+        batch_size = tf.shape(q)[0]
+
+        proj_q = self.wq(q)  # (batch_size, seq_len, d_model)
+        scores = self.d_score(proj_q)  # (batch_size, seq_len, 1)
+        attention_weights = tf.nn.softmax(scores, axis=1)
+
+        matmul_attention = tf.matmul(q,
+                                     attention_weights,
+                                     transpose_b=False,
+                                     transpose_a=True)  # (batch_size, d_model, 1)
+
+        concat_attention = tf.reshape(
+            matmul_attention, (batch_size, self.d_model)
+        )  # (batch_size, d_model)
+
+        return concat_attention
 
 
 def transformer_tabular(
@@ -59,7 +91,7 @@ def transformer_tabular(
 
     if task in ["classification", "regression"]:
 
-        x = Concatenate()([GlobalMaxPool1D()(a) for a in l_encoded])
+        x = Concatenate()([AttentionPooling(d_model=d_model, name="att_%s" % i)(a) for i, a in enumerate(l_encoded)])
 
         x = Dense(d_model, name="d3", activation="relu")(x)
 

@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from deeptabular.deeptabular import DeepTabularRegressor, DeepTabularUnsupervised
 
 if __name__ == "__main__":
-    n = 5
+    n = 10
     cols = [
         "url",
         "timedelta",
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     train = train.sample(frac=1)
 
     pretrain = DeepTabularUnsupervised(
-        num_layers=6, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
+        num_layers=10, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
     )
 
     pretrain.fit(
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
         for _ in range(n):
             regressor = DeepTabularRegressor(
-                num_layers=6,
+                num_layers=10,
                 cat_cols=cat_cols,
                 num_cols=num_cols,
                 n_targets=len(targets),

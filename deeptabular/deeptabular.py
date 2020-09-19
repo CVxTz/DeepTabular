@@ -291,9 +291,6 @@ class DeepTabularRegressor(DeepTabular):
             batch_size=128,
         )
 
-        if save_path is not None:
-            self.model.load_weights(save_path)
-
     def predict(self, test):
         data_x1, data_x2 = self.prepare_data(test)
 

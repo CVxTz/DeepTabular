@@ -43,7 +43,7 @@ if __name__ == "__main__":
     train = train.sample(frac=1)
 
     pretrain = DeepTabularUnsupervised(
-        num_layers=6, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
+        num_layers=10, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
     )
 
     pretrain.fit(
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
         for _ in range(n):
             classifier = DeepTabularClassifier(
-                num_layers=6, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
+                num_layers=10, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
             )
             classifier.fit(train.sample(n=size), target_col=target, epochs=256)
 
