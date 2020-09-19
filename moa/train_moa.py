@@ -15,15 +15,13 @@ if __name__ == "__main__":
 
     test = pd.read_csv("../data/lish-moa/test_features.csv")
 
-    data = pd.merge(data_f, data_t, how="inner", on="sig_id")
+    train = pd.merge(data_f, data_t, how="inner", on="sig_id")
 
     cols = json.load(open("cols.json", "r"))
 
     targets = cols["targets"]
     num_cols = cols["num_cols"]
     cat_cols = cols["cat_cols"]
-
-    train, val = train_test_split(data, test_size=0.1, random_state=1337)
 
     for k in num_cols:
         mean = train[k].mean()
@@ -32,20 +30,19 @@ if __name__ == "__main__":
         test[k] = (test[k] - mean) / std
 
     classifier = DeepTabularMultiLabel(
-        num_layers=12, cat_cols=cat_cols, num_cols=num_cols, n_targets=len(targets),
+        num_layers=8,
+        cat_cols=cat_cols,
+        num_cols=num_cols,
+        n_targets=len(targets),
+        d_model=64,
+        dropout=0.1,
     )
 
-    classifier.fit(train, target_cols=targets, epochs=64)
+    classifier.fit(train, target_cols=targets, epochs=32, batch_size=32)
+
+    classifier.save_config("moa.json")
+    classifier.save_weigts("moa.h5")
 
     pred_test = classifier.predict(test)
-    pred_val = classifier.predict(val)
 
     y_true_test = np.array(test[targets].values)
-    y_true_val = np.array(test[targets].values)
-
-    score = 0
-    for i in range(len(targets)):
-        score_ = log_loss(y_true_val[:, i], pred_val[:, i])
-        score += score_ / len(targets)
-
-    print(score)

@@ -6,6 +6,7 @@ from typing import List, Union
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import log_loss
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from tqdm import tqdm
 
@@ -14,10 +15,17 @@ from .models import transformer_tabular
 
 class DeepTabular:
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.01,
+        self,
+        cat_cols=None,
+        num_cols=None,
+        n_targets=None,
+        num_layers=4,
+        dropout=0.01,
+        d_model=64,
     ):
         self.num_layers = num_layers
         self.dropout = dropout
+        self.d_model = d_model
         self.model = None
         self.mapping = None
         self.frequency = None
@@ -104,6 +112,7 @@ class DeepTabular:
                     "num_layers": self.num_layers,
                     "dropout": self.dropout,
                     "frequency": self.frequency,
+                    "d_model": self.d_model,
                 },
                 f,
                 indent=4,
@@ -125,6 +134,7 @@ class DeepTabular:
         self.num_layers = config["num_layers"]
         self.dropout = config["dropout"]
         self.frequency = config["frequency"]
+        self.d_model = config["d_model"]
 
     def load_weights(self, path, by_name=False):
 
@@ -134,7 +144,13 @@ class DeepTabular:
 
 class DeepTabularClassifier(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.1,
+        self,
+        cat_cols=None,
+        num_cols=None,
+        n_targets=None,
+        num_layers=4,
+        dropout=0.1,
+        d_model=64,
     ):
         super().__init__(
             cat_cols=cat_cols,
@@ -142,6 +158,7 @@ class DeepTabularClassifier(DeepTabular):
             n_targets=n_targets,
             num_layers=num_layers,
             dropout=dropout,
+            d_model=d_model,
         )
 
     def build_model(self):
@@ -150,6 +167,7 @@ class DeepTabularClassifier(DeepTabular):
             n_targets=self.n_targets,
             num_layers=self.num_layers,
             dropout=self.dropout,
+            d_model=self.d_model,
             seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
@@ -165,6 +183,7 @@ class DeepTabularClassifier(DeepTabular):
         patience_reduce: int = 9,
         save_path: Union[str, None] = "classifier.h5",
         epochs=128,
+        batch_size=128,
     ):
 
         if self.mapping is None:
@@ -198,7 +217,7 @@ class DeepTabularClassifier(DeepTabular):
             validation_data=([val_x1, val_x2], val_y),
             epochs=epochs,
             callbacks=callbacks,
-            batch_size=128,
+            batch_size=batch_size,
         )
 
     def predict(self, test):
@@ -219,7 +238,13 @@ class DeepTabularClassifier(DeepTabular):
 
 class DeepTabularRegressor(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.1,
+        self,
+        cat_cols=None,
+        num_cols=None,
+        n_targets=None,
+        num_layers=4,
+        dropout=0.1,
+        d_model=64,
     ):
         super().__init__(
             cat_cols=cat_cols,
@@ -227,6 +252,7 @@ class DeepTabularRegressor(DeepTabular):
             n_targets=n_targets,
             num_layers=num_layers,
             dropout=dropout,
+            d_model=d_model,
         )
 
     def build_model(self):
@@ -235,6 +261,7 @@ class DeepTabularRegressor(DeepTabular):
             n_targets=self.n_targets,
             num_layers=self.num_layers,
             dropout=self.dropout,
+            d_model=self.d_model,
             seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
@@ -251,6 +278,7 @@ class DeepTabularRegressor(DeepTabular):
         patience_reduce: int = 9,
         save_path: Union[str, None] = "regressor.h5",
         epochs=128,
+        batch_size=128,
     ):
 
         if self.mapping is None:
@@ -284,7 +312,7 @@ class DeepTabularRegressor(DeepTabular):
             validation_data=([val_x1, val_x2], val_y),
             epochs=epochs,
             callbacks=callbacks,
-            batch_size=128,
+            batch_size=batch_size,
         )
 
     def predict(self, test):
@@ -300,7 +328,13 @@ class DeepTabularRegressor(DeepTabular):
 
 class DeepTabularMultiLabel(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.1,
+        self,
+        cat_cols=None,
+        num_cols=None,
+        n_targets=None,
+        num_layers=4,
+        dropout=0.1,
+        d_model=64,
     ):
         super().__init__(
             cat_cols=cat_cols,
@@ -308,6 +342,7 @@ class DeepTabularMultiLabel(DeepTabular):
             n_targets=n_targets,
             num_layers=num_layers,
             dropout=dropout,
+            d_model=d_model,
         )
 
     def build_model(self):
@@ -316,6 +351,7 @@ class DeepTabularMultiLabel(DeepTabular):
             n_targets=self.n_targets,
             num_layers=self.num_layers,
             dropout=self.dropout,
+            d_model=self.d_model,
             seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
@@ -332,6 +368,7 @@ class DeepTabularMultiLabel(DeepTabular):
         patience_reduce: int = 9,
         save_path: Union[str, None] = "multiclassifier.h5",
         epochs=128,
+        batch_size=128,
     ):
 
         if self.mapping is None:
@@ -365,8 +402,18 @@ class DeepTabularMultiLabel(DeepTabular):
             validation_data=([val_x1, val_x2], val_y),
             epochs=epochs,
             callbacks=callbacks,
-            batch_size=128,
+            batch_size=batch_size,
         )
+
+        pred_val = self.model.predict([val_x1, val_x2])
+        pred_val = np.clip(pred_val, 1e-15, 1-1e-15)
+
+        score = 0
+        for i in range(len(target_cols)):
+            score_ = log_loss(val_y[:, i], pred_val[:, i])
+            score += score_ / len(target_cols)
+
+        print("val_log_loss", score)
 
     def predict(self, test):
         data_x1, data_x2 = self.prepare_data(test)
@@ -381,7 +428,13 @@ class DeepTabularMultiLabel(DeepTabular):
 
 class DeepTabularUnsupervised(DeepTabular):
     def __init__(
-        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.1,
+        self,
+        cat_cols=None,
+        num_cols=None,
+        n_targets=None,
+        num_layers=4,
+        dropout=0.1,
+        d_model=64,
     ):
         super().__init__(
             cat_cols=cat_cols,
@@ -389,6 +442,7 @@ class DeepTabularUnsupervised(DeepTabular):
             n_targets=n_targets,
             num_layers=num_layers,
             dropout=dropout,
+            d_model=d_model,
         )
 
     def build_model(self):
@@ -397,6 +451,7 @@ class DeepTabularUnsupervised(DeepTabular):
             n_targets=self.n_targets,
             num_layers=self.num_layers,
             dropout=self.dropout,
+            d_model=self.d_model,
             seq_len=2 * (0 if self.cat_cols is None else len(self.cat_cols))
             + (0 if self.num_cols is None else len(self.num_cols)),
             embeds_size=50,
@@ -412,6 +467,7 @@ class DeepTabularUnsupervised(DeepTabular):
         patience_reduce: int = 9,
         save_path: Union[str, None] = "unsupervised.h5",
         epochs=128,
+        batch_size=128,
     ):
 
         if self.mapping is None:
@@ -448,7 +504,7 @@ class DeepTabularUnsupervised(DeepTabular):
                 validation_data=([val_x1, val_x2_mask], val_x2),
                 epochs=10,
                 callbacks=callbacks,
-                batch_size=128,
+                batch_size=batch_size,
             )
 
             self.save_config("%s_config.json" % save_path)

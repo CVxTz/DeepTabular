@@ -53,12 +53,12 @@ def transformer_tabular(
     num_dense_layers=3,
     d_model=64,
     num_heads=4,
-    dff=256,
     task="classification",
     lr=0.0001,
     dropout=0.01,
     seq_len=None,
 ):
+    dff = 2 * d_model
     input_cols = Input(shape=(seq_len,))
     input_values = Input(shape=(seq_len, 1))
 
