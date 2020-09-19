@@ -1,16 +1,12 @@
+import tensorflow as tf
 from tensorflow.keras.layers import (
     Input,
-    GlobalMaxPool1D,
     Dense,
-    Flatten,
     Embedding,
     Add,
     Concatenate,
     Layer,
 )
-
-import tensorflow as tf
-
 from tensorflow.keras.losses import (
     sparse_categorical_crossentropy,
     binary_crossentropy,
@@ -32,17 +28,15 @@ class AttentionPooling(Layer):
         self.d_score = Dense(1)
 
     def call(self, q, mask=None):
-
         batch_size = tf.shape(q)[0]
 
         proj_q = self.wq(q)  # (batch_size, seq_len, d_model)
         scores = self.d_score(proj_q)  # (batch_size, seq_len, 1)
         attention_weights = tf.nn.softmax(scores, axis=1)
 
-        matmul_attention = tf.matmul(q,
-                                     attention_weights,
-                                     transpose_b=False,
-                                     transpose_a=True)  # (batch_size, d_model, 1)
+        matmul_attention = tf.matmul(
+            q, attention_weights, transpose_b=False, transpose_a=True
+        )  # (batch_size, d_model, 1)
 
         concat_attention = tf.reshape(
             matmul_attention, (batch_size, self.d_model)
@@ -89,9 +83,14 @@ def transformer_tabular(
 
     x_encoded = l_encoded[-1]
 
-    if task in ["classification", "regression"]:
+    if task in ["classification", "regression", "multilabel"]:
 
-        x = Concatenate()([AttentionPooling(d_model=d_model, name="att_%s" % i)(a) for i, a in enumerate(l_encoded)])
+        x = Concatenate()(
+            [
+                AttentionPooling(d_model=d_model, name="att_%s" % i)(a)
+                for i, a in enumerate(l_encoded)
+            ]
+        )
 
         x = Dense(d_model, name="d3", activation="relu")(x)
 
@@ -110,6 +109,9 @@ def transformer_tabular(
 
     elif task == "regression":
         out = Dense(n_targets, activation="linear", name="d7")(x)
+
+    elif task == "multilabel":
+        out = Dense(n_targets, activation="sigmoid", name="d9")(x)
 
     elif task == "pretrain":
         out = Dense(n_targets, activation="linear", name="d8")(x_encoded)
@@ -136,6 +138,10 @@ def transformer_tabular(
     elif task == "regression":
 
         model.compile(optimizer=opt, loss=mse)
+
+    elif task == "multilabel":
+
+        model.compile(optimizer=opt, loss=binary_crossentropy)
 
     elif task == "pretrain":
         model.compile(optimizer=opt, loss=mae)

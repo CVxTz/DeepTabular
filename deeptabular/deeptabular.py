@@ -168,11 +168,9 @@ class DeepTabularClassifier(DeepTabular):
     ):
 
         if self.mapping is None:
-
             self.fit_mapping(df)
 
         if self.model is None:
-
             self.build_model()
 
         data_x1, data_x2 = self.prepare_data(df)
@@ -256,11 +254,90 @@ class DeepTabularRegressor(DeepTabular):
     ):
 
         if self.mapping is None:
-
             self.fit_mapping(df)
 
         if self.model is None:
+            self.build_model()
 
+        data_x1, data_x2 = self.prepare_data(df)
+
+        data_y = df[target_cols].values
+
+        train_x1, val_x1, train_x2, val_x2, train_y, val_y = train_test_split(
+            data_x1, data_x2, data_y, test_size=0.1, random_state=1337
+        )
+
+        train_x1 = np.array(train_x1)
+        val_x1 = np.array(val_x1)
+        train_x2 = np.array(train_x2)[..., np.newaxis]
+        val_x2 = np.array(val_x2)[..., np.newaxis]
+        train_y = np.array(train_y)
+        val_y = np.array(val_y)
+
+        callbacks = self.build_callbacks(
+            monitor, patience_early, patience_reduce, save_path
+        )
+
+        self.model.fit(
+            [train_x1, train_x2],
+            train_y,
+            validation_data=([val_x1, val_x2], val_y),
+            epochs=epochs,
+            callbacks=callbacks,
+            batch_size=128,
+        )
+
+    def predict(self, test):
+        data_x1, data_x2 = self.prepare_data(test)
+
+        data_x1 = np.array(data_x1)
+        data_x2 = np.array(data_x2)[..., np.newaxis]
+
+        predict = self.model.predict([data_x1, data_x2])
+
+        return predict
+
+
+class DeepTabularMultiLabel(DeepTabular):
+    def __init__(
+        self, cat_cols=None, num_cols=None, n_targets=None, num_layers=4, dropout=0.1,
+    ):
+        super().__init__(
+            cat_cols=cat_cols,
+            num_cols=num_cols,
+            n_targets=n_targets,
+            num_layers=num_layers,
+            dropout=dropout,
+        )
+
+    def build_model(self):
+        model = transformer_tabular(
+            n_categories=len(self.mapping) + 1,
+            n_targets=self.n_targets,
+            num_layers=self.num_layers,
+            dropout=self.dropout,
+            seq_len=(0 if self.cat_cols is None else len(self.cat_cols))
+            + (0 if self.num_cols is None else len(self.num_cols)),
+            embeds_size=50,
+            task="multilabel",
+        )
+        self.model = model
+
+    def fit(
+        self,
+        df: pd.DataFrame,
+        target_cols: List[str],
+        monitor: str = "val_loss",
+        patience_early: int = 15,
+        patience_reduce: int = 9,
+        save_path: Union[str, None] = "multiclassifier.h5",
+        epochs=128,
+    ):
+
+        if self.mapping is None:
+            self.fit_mapping(df)
+
+        if self.model is None:
             self.build_model()
 
         data_x1, data_x2 = self.prepare_data(df)
@@ -338,11 +415,9 @@ class DeepTabularUnsupervised(DeepTabular):
     ):
 
         if self.mapping is None:
-
             self.fit_mapping(df)
 
         if self.model is None:
-
             self.build_model()
 
         data_x1, data_x2 = self.prepare_data(df, add_distractors=True)

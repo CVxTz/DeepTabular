@@ -62,7 +62,6 @@ if __name__ == "__main__":
         acc = 0
 
         for _ in range(n):
-
             classifier = DeepTabularClassifier(
                 num_layers=12,
                 cat_cols=cat_cols,
@@ -86,7 +85,6 @@ if __name__ == "__main__":
         acc = 0
 
         for _ in range(n):
-
             classifier = DeepTabularClassifier(n_targets=int(train[target].max() + 1))
             classifier.load_config("cover_config.json")
             classifier.load_weights("cover_weights.h5", by_name=True)

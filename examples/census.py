@@ -1,8 +1,8 @@
 # Data : https://www.kaggle.com/uciml/adult-census-income/
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 from deeptabular.deeptabular import DeepTabularClassifier
-from sklearn.model_selection import train_test_split
 
 if __name__ == "__main__":
     data = pd.read_csv("../data/census/adult.csv")

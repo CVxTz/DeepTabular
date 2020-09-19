@@ -1,8 +1,9 @@
 # Data : http://www.gaussianprocess.org/gpml/data/
 import json
-import scipy.io
+
 import numpy as np
 import pandas as pd
+import scipy.io
 from sklearn.metrics import mean_absolute_error
 
 from deeptabular.deeptabular import DeepTabularRegressor, DeepTabularUnsupervised
@@ -55,7 +56,6 @@ if __name__ == "__main__":
         mae = 0
 
         for _ in range(n):
-
             regressor = DeepTabularRegressor(
                 num_layers=10,
                 cat_cols=cat_cols,
@@ -80,7 +80,6 @@ if __name__ == "__main__":
         mae = 0
 
         for _ in range(n):
-
             regressor = DeepTabularRegressor(n_targets=len(targets))
             regressor.load_config("sarco_config.json")
             regressor.load_weights("sarco_weights.h5", by_name=True)

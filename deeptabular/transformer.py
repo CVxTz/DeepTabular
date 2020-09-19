@@ -158,7 +158,6 @@ class Encoder(tf.keras.layers.Layer):
         self.dropout = tf.keras.layers.Dropout(rate)
 
     def call(self, x, training=None, mask=None):
-
         x = self.dropout(x, training=training)
 
         for i in range(self.num_layers):

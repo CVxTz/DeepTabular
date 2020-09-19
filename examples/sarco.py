@@ -1,7 +1,7 @@
 # Data : http://www.gaussianprocess.org/gpml/data/
-import scipy.io
 import numpy as np
 import pandas as pd
+import scipy.io
 from sklearn.metrics import mean_absolute_error
 
 from deeptabular.deeptabular import DeepTabularRegressor
@@ -33,10 +33,7 @@ if __name__ == "__main__":
         test[k] = (test[k] - mean) / std
 
     regressor = DeepTabularRegressor(
-        num_layers=6,
-        cat_cols=cat_cols,
-        num_cols=num_cols,
-        n_targets=len(targets),
+        num_layers=6, cat_cols=cat_cols, num_cols=num_cols, n_targets=len(targets),
     )
 
     regressor.fit(train, target_cols=targets, epochs=64)
