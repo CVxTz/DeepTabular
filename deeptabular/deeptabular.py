@@ -5,8 +5,8 @@ from typing import List, Union
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import log_loss
+from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from tqdm import tqdm
 
@@ -406,7 +406,7 @@ class DeepTabularMultiLabel(DeepTabular):
         )
 
         pred_val = self.model.predict([val_x1, val_x2])
-        pred_val = np.clip(pred_val, 1e-15, 1-1e-15)
+        pred_val = np.clip(pred_val, 1e-15, 1 - 1e-15)
 
         score = 0
         for i in range(len(target_cols)):

@@ -97,8 +97,8 @@ if __name__ == "__main__":
         pretrain_mae.append(mae)
 
     print("sizes", sizes)
-    print("scratch_accuracies", scratch_mae)
-    print("pretrain_accuracies", pretrain_mae)
+    print("scratch_mae", scratch_mae)
+    print("pretrain_mae", pretrain_mae)
 
     with open("sarco_performance.json", "w") as f:
         json.dump(
