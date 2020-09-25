@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from deeptabular.deeptabular import DeepTabularRegressor, DeepTabularUnsupervised
 
 if __name__ == "__main__":
-    n = 10
+    n = 5
     cols = [
         "url",
         "timedelta",

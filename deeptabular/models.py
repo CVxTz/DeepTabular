@@ -50,13 +50,14 @@ def transformer_tabular(
     n_targets,
     embeds_size=10,
     num_layers=4,
-    num_dense_layers=3,
+    num_dense_layers=4,
     d_model=64,
     num_heads=4,
     task="classification",
     lr=0.0001,
     dropout=0.01,
     seq_len=None,
+    att_heads=2
 ):
     dff = 2 * d_model
     input_cols = Input(shape=(seq_len,))
@@ -88,14 +89,14 @@ def transformer_tabular(
         x = Concatenate()(
             [
                 AttentionPooling(d_model=d_model, name="att_%s" % i)(a)
-                for i, a in enumerate(l_encoded)
+                for i, a in enumerate(l_encoded * att_heads)
             ]
         )
 
-        x = Dense(d_model, name="d3", activation="relu")(x)
+        x = Dense(max(d_model, n_targets), name="d3", activation="relu")(x)
 
         for i in range(num_dense_layers):
-            x_to_add = Dense(d_model, activation="relu", name="d4_%s" % i)(x)
+            x_to_add = Dense(max(d_model, n_targets), activation="relu", name="d4_%s" % i)(x)
             x = Add()([x, x_to_add])
 
     if task == "classification":
