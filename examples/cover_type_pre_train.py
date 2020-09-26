@@ -52,7 +52,7 @@ if __name__ == "__main__":
         train, save_path="cover", epochs=128,
     )
 
-    sizes = [500, 1000, 2000, 5000]
+    sizes = [800, 1000, 2000, 5000]
 
     scratch_accuracies = []
     pretrain_accuracies = []
