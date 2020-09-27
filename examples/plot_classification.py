@@ -3,7 +3,7 @@ import json
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-    dataset = "census"
+    dataset = "cover"
     data = json.load(open(f"{dataset}_pretrain_performance.json"))
 
     fig = plt.figure()

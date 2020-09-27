@@ -3,7 +3,7 @@ import json
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-    dataset = "sarco"
+    dataset = "news"
     data = json.load(open(f"{dataset}_performance.json"))
     data_gb = json.load(open(f"{dataset}_lgbm_performance.json"))
 

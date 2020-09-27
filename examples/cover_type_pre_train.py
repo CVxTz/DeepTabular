@@ -48,11 +48,7 @@ if __name__ == "__main__":
         num_layers=12, cat_cols=cat_cols, num_cols=num_cols, n_targets=1,
     )
 
-    pretrain.fit(
-        train, save_path="cover", epochs=128,
-    )
-
-    sizes = [800, 1000, 2000, 5000]
+    sizes = [500, 1000, 2000, 5000]
 
     scratch_accuracies = []
     pretrain_accuracies = []
