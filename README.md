@@ -1,3 +1,8 @@
+
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4060165.svg)](https://doi.org/10.5281/zenodo.4060165)
+
+
 ### Training Better Deep Learning Models for Structured Data using Semi-supervised Learning
 
 #### Leveraging Unlabeled samples in order to improve the performance of a neural network.
@@ -193,3 +198,17 @@ in the computer vision or natural language domain. In this project we demonstrat
 that it can also work when applied to structured data, making it competitive
 with other machine learning methods like gradient boosting in the low data
 regime.
+
+Cite:
+```
+@software{mansar_youness_2020_4060165,
+  author       = {Mansar Youness},
+  title        = {CVxTz/DeepTabular: v1.0},
+  month        = sep,
+  year         = 2020,
+  publisher    = {Zenodo},
+  version      = {v1.0},
+  doi          = {10.5281/zenodo.4060165},
+  url          = {https://doi.org/10.5281/zenodo.4060165}
+}
+```
