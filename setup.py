@@ -21,7 +21,6 @@ setup(
     keywords="tabular",
     url="https://github.com/CVxTz/DeepTabular",
     packages=["deeptabular"],
-    long_description=read("README.md"),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
