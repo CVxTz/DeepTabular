@@ -59,6 +59,7 @@ def test_build_mapping():
 
 
 def test_build_save():
+
     base_model = DeepTabular(cat_cols=["C1", "C2"], num_cols=["N1", "N2"], n_targets=3)
     df = pd.DataFrame(
         {
