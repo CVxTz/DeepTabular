@@ -2,9 +2,13 @@ language: python
 python:
   - "3.6"
   - "3.7"
-# command to install dependencies
 install:
   - pip install -r requirements.txt
+  - pip install codecov
+  - pip install pytest-cov
   - pip install .
-# command to run tests
-script: pytest
+script:
+  - pytest --cov=./
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
