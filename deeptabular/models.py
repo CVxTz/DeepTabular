@@ -57,7 +57,7 @@ def transformer_tabular(
     lr=0.0001,
     dropout=0.01,
     seq_len=None,
-    att_heads=2
+    att_heads=2,
 ):
     dff = 2 * d_model
     input_cols = Input(shape=(seq_len,))
@@ -96,7 +96,9 @@ def transformer_tabular(
         x = Dense(max(d_model, n_targets), name="d3", activation="relu")(x)
 
         for i in range(num_dense_layers):
-            x_to_add = Dense(max(d_model, n_targets), activation="relu", name="d4_%s" % i)(x)
+            x_to_add = Dense(
+                max(d_model, n_targets), activation="relu", name="d4_%s" % i
+            )(x)
             x = Add()([x, x_to_add])
 
     if task == "classification":

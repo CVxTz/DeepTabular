@@ -198,7 +198,12 @@ class DeepTabularClassifier(DeepTabular):
 
         try:
             train_x1, val_x1, train_x2, val_x2, train_y, val_y = train_test_split(
-                data_x1, data_x2, data_y, test_size=0.1, random_state=1337, stratify=data_y
+                data_x1,
+                data_x2,
+                data_y,
+                test_size=0.1,
+                random_state=1337,
+                stratify=data_y,
             )
         except ValueError:
             train_x1, val_x1, train_x2, val_x2, train_y, val_y = train_test_split(

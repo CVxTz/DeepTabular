@@ -5,8 +5,6 @@
 
 ### Training Better Deep Learning Models for Structured Data using Semi-supervised Learning
 
-#### Leveraging Unlabeled samples in order to improve the performance of a neural network.
-
 Deep learning is known to work well when applied to unstructured data like text,
 audio, or images but can sometimes lag behind other machine learning approaches
 like gradient boosting when applied to structured or tabular data. In this
