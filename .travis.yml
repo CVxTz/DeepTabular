@@ -8,7 +8,7 @@ install:
   - pip install pytest-cov
   - pip install .
 script:
-  - pytest --cov-report=xml --cov=myproj tests/
+  - pytest --cov-report=xml --cov=deeptabular tests/
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
