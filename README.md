@@ -1,6 +1,8 @@
 
 
-[![Build Status](https://travis-ci.com/CVxTz/DeepTabular.svg?branch=master)](https://travis-ci.com/CVxTz/DeepTabular)[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4060165.svg)](https://doi.org/10.5281/zenodo.4060165)
+[![Build Status](https://travis-ci.com/CVxTz/DeepTabular.svg?branch=master)](https://travis-ci.com/CVxTz/DeepTabular)
+[![codecov](https://codecov.io/gh/CVxTz/DeepTabular/branch/master/graph/badge.svg)](https://codecov.io/gh/CVxTz/DeepTabular)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4060165.svg)](https://doi.org/10.5281/zenodo.4060165)
 
 
 ### Training Better Deep Learning Models for Structured Data using Semi-supervised Learning
