@@ -109,7 +109,7 @@ def test_build_classifier():
         lambda x: 1 if (x["C1"] == 4 and x["N1"] < 0.5) else 0, axis=1
     )
 
-    classifier.fit(df, target_col="target", epochs=100)
+    classifier.fit(df, target_col="target", epochs=100, save_path=None)
 
     pred = classifier.predict(test)
 
@@ -120,7 +120,7 @@ def test_build_classifier():
 
 
 def test_build_regressor():
-    classifier = DeepTabularRegressor(
+    regressor = DeepTabularRegressor(
         cat_cols=["C1", "C2"], num_cols=["N1", "N2"], n_targets=1, num_layers=1
     )
     df = pd.DataFrame(
@@ -149,11 +149,11 @@ def test_build_regressor():
         lambda x: x["N1"] * x["N2"] * x["C1"] / (x["C2"] + 1), axis=1
     )
 
-    classifier.fit(df, target_cols=["target"], epochs=100)
+    regressor.fit(df, target_cols=["target"], epochs=100, save_path=None)
 
-    pred = classifier.predict(test)
+    pred = regressor.predict(test)
 
     mae = mean_absolute_error(test["target"], pred)
 
-    assert isinstance(classifier.model, tf.keras.models.Model)
+    assert isinstance(regressor.model, tf.keras.models.Model)
     assert mae < 0.5
