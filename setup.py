@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name="deeptabular",
-    version="0.0.1",
+    version="0.0.2",
     author="Youness MANSAR",
     author_email="mansaryounessecp@gmail.com",
     description="Deep neural networks for tabular data",
